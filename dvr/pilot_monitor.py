@@ -1,5 +1,5 @@
 """Public S3 availability probes; bounded JSON and HEAD-only sample videos."""
-import json,time,threading,urllib.request
+import json,time,threading,urllib.request,re
 from datetime import datetime,timezone
 from urllib.parse import urlsplit,urljoin,unquote
 BASE='https://race-dvr-public.s3.us-east-1.amazonaws.com/pilot-review/'
@@ -26,7 +26,9 @@ def parse_manifest(body,now):
  if not isinstance(data,dict) or not isinstance(data.get('version'),str) or not isinstance(data.get('races'),list) or len(data['races'])>20000:raise ValueError('Invalid manifest')
  value=data.get('generatedAt')
  if not isinstance(value,str):raise ValueError('Timestamp missing')
- generated=datetime.fromisoformat(value.replace('Z','+00:00'))
+ # .NET manifests use seven fractional digits; Python 3.10 accepts at most six.
+ value=re.sub(r'(\.\d{6})\d+(?=[+-]|$)',r'\1',value.replace('Z','+00:00'))
+ generated=datetime.fromisoformat(value)
  if generated.tzinfo is None:raise ValueError('Timestamp lacks zone')
  return data['races'],max(0,int(now-generated.timestamp())),generated.timestamp()>now+60
 

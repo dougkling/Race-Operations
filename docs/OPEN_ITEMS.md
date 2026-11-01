@@ -4,7 +4,7 @@
 
 - The owner created `dougkling/Race-Operations` and authorized temporary public publication on 2026-11-01. The owner plans to change visibility later.
 - All 14 authentic source snapshots are imported on `feature/standalone-import`; source, documentation and CI are being published through a PR. Check the PR/Actions state for final merge and check results.
-- The local Git handoff preserves 14 annotated `source-revision/*` tags. Remote tags and enforcement are pending: the connected API has no tag-creation or repository-administration operation.
+- The local Git handoff preserves 14 annotated `source-revision/*` tags. The source-tags workflow creates the corresponding remote tags after merge, refuses to overwrite existing tags, and must be checked for success. Repository protection still requires administration access.
 - Enable `main` protection, require PRs and passing `portable`/`powershell` checks, prohibit force push/deletion; verify enforcement. Protect accepted release/source tags against changes. Policy documents alone do not enforce these settings.
 - Do not relabel source recovery as historical release certification. Full Windows deployment acceptance remains separate from CI.
 - Update the old DroneRaceTools landing page after the standalone PR is merged. Preserve its original history.

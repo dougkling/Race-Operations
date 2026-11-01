@@ -1,6 +1,6 @@
 # Race Operations — AI maintainer handoff
 
-Owner: Doug Kling. Prepared 2026-11-01. Standalone repository (temporarily public by owner request): `dougkling/Race-Operations`. Original source: `dougkling/DroneRaceTools/race-operations` through commit `b095a71fdfeefc348c21d75412410336e8e0ade8`, with last feature commit `bceae031a8428c77b5c4d045b932ab643df25065`. Source matches the published UI 0.9.2/backend 0.9.0/cloud agent 0.7.0/DVR agent 0.8.0 baseline, except the explicitly documented DVR installer correction.
+Owner: Doug Kling. Prepared 2026-11-01. Standalone repository (temporarily public by owner request): `dougkling/Race-Operations`. Original source: `dougkling/DroneRaceTools/race-operations` through commit `b095a71fdfeefc348c21d75412410336e8e0ade8`, with last feature commit `bceae031a8428c77b5c4d045b932ab643df25065`. Source matches the published UI 0.9.2/backend 0.9.0/cloud agent 0.7.0/DVR agent 0.8.0 baseline, except the documented DVR installer and Python 3.10 Pilot Review timestamp compatibility corrections.
 
 ## User intent and workflow
 

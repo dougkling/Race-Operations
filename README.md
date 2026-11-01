@@ -12,7 +12,7 @@ Standalone repository: **dougkling/Race-Operations**. Public temporarily at the 
 | DVR monitoring/recovery agent | 0.8.0 | OBS / DVR PC |
 | Scoring PC | Pending | Grey placeholders only |
 
-Versions are intentionally independent. This import adds documentation, source history, packaging and a DVR installer compatibility correction; it is not evidence of a new production deployment.
+Versions are intentionally independent. This import adds documentation, source history, packaging and DVR installer and Python 3.10 manifest timestamp compatibility corrections; it is not evidence of a new production deployment.
 
 ## Documentation
 

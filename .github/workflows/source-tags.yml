@@ -1,0 +1,19 @@
+name: Preserve source snapshot tags
+on:
+  push:
+    branches: [main]
+    paths: [docs/SOURCE_HISTORY.json, .github/workflows/source-tags.yml, tools/tag_source_history.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-tags:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - run: python tools/tag_source_history.py
