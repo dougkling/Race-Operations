@@ -27,9 +27,10 @@ function connectorEvidence(hosts){
   'Cloud connection evidence unavailable'};
 }
 let csrf="",sending=false,actionTarget="pitwall-restart",dvrActions={};
-const names={'racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'Judge Cues','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'Disk space · C:\\DVR','pilot-review':'Pilot Review','scoring':'Scoring Client','health-monitor':'System Health Check'};const ids={cloud:['racebot','commentator','cloud-proxy','disk-space'],dvr:['judge-cues','review-status','iis','obs','uploader','connector','disk-network','pilot-review','scoring','health-monitor']};
+const names={'agent-link':'Agent connection','racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'Judge Cues','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'Disk space · C:\\DVR','pilot-review':'Pilot Review','scoring':'Scoring Client','health-monitor':'System Health Check'};const ids={cloud:['agent-link','racebot','commentator','cloud-proxy','disk-space'],dvr:['agent-link','judge-cues','review-status','iis','obs','uploader','connector','disk-network','pilot-review','scoring','health-monitor']};
 function node(tag,text,cls){const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e}
 function serviceDetail(id,c,h){
+ if(id==='agent-link')return c.status==='red'?'No recent agent heartbeat':c.status==='green'?'Receiving agent heartbeats':'Waiting for agent evidence';
  if(id==='disk-space'||id==='disk-network')return diskDetail(c);
  if(id==='pilot-review')return pilotDetail(c);
  if(id==='health-monitor')return healthDetail(c);
@@ -44,9 +45,18 @@ function actionControl(action,a){
  const reason=a.reason==='Target is green'?'Recovery available if health check fails.':a.reason;
  box.append(b,node('p',reason,'action-reason'));return box;
 }
+const muting=new Set();
+async function setMute(hostId,componentId,muted,button){
+ const key=hostId+':'+componentId;if(muting.has(key))return;muting.add(key);button.disabled=true;
+ try{
+  const r=await fetch('/api/monitor-mute',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({hostId,componentId,muted})});
+  if(!r.ok){const d=await r.json();throw Error(d.error||'Mute update failed')}
+ }catch(e){alert(e.message||'Mute outcome unknown. Refresh to verify.')}finally{muting.delete(key);await update()}
+}
 function render(d){
  const expanded=new Set(Array.from(document.querySelectorAll('details[open]')).map(e=>e.dataset.key));
  const focused=document.activeElement?.dataset?.action;
+ const focusedMute=document.activeElement?.dataset?.mute;
  const focusedDetail=document.activeElement?.parentElement?.dataset?.key;
  csrf=d.csrf;dvrActions=d.dvrActions||{};
  document.querySelector('#login').hidden=true;document.querySelector('#overview').hidden=false;document.querySelector('#activity-panel').hidden=false;
@@ -59,7 +69,7 @@ function render(d){
   top.append(title,node('span',h.connected?'● Agent connected':'○ Disconnected','badge '+(h.connected?'green':'unknown')));host.append(top);
   const grid=node('div',null,'service-grid');
   for(const id of ids[h.id]||[]){
-   const c=id==='connector'?connectorEvidence(d.hosts):(h.connected?h.sample?.components?.find(c=>c.id===id):null);
+   const c=id==='agent-link'?{status:h.agentStatus||(h.connected?'green':'unknown')}:id==='connector'?connectorEvidence(d.hosts):(h.connected?h.sample?.components?.find(c=>c.id===id):null);
    const status=c?.status||'unknown';counts[status]=(counts[status]||0)+1;
    const card=node('article',null,'service state-'+status),head=node('div',null,'service-top');card.dataset.component=id;
    head.append(node('h3',names[id]||id),node('span',({green:'● Healthy',yellow:'● Degraded',red:'● Offline',unknown:'○ Unknown'}[status]||'○ Unknown'),'badge '+status));card.append(head);
@@ -75,6 +85,11 @@ function render(d){
     details.append(node('summary','Details'));const facts=node('div',null,'facts');for(const part of parts)facts.append(node('div',part,'fact'));details.append(facts);body.append(details);
    }
    card.append(body);
+   const muteEntry=d.alerts?.mutes?.find(m=>m.hostId===h.id&&m.componentId===id);
+   const muted=muteEntry?.muted===true;const mute=node('button',muted?'Alerts muted':'Mute alerts','mute-toggle'+(muted?' is-muted':''));
+   mute.type='button';mute.dataset.mute=h.id+':'+id;mute.setAttribute('aria-pressed',String(muted));mute.setAttribute('aria-label',(muted?'Unmute':'Mute')+' email alerts for '+(names[id]||id)+' on '+h.name);
+   mute.disabled=!muteEntry||muting.has(mute.dataset.mute);mute.onclick=()=>setMute(h.id,id,!muted,mute);
+   const muteBox=node('div',null,'mute-row');muteBox.append(mute);card.append(muteBox);
    if(h.id==='dvr')for(const [action,a] of Object.entries(dvrActions))if(a.target===id)card.append(actionControl(action,a));
    if(h.id==='cloud'&&id==='commentator')card.append(actionControl('pitwall-restart',{label:'Restart RaceBot + Commentator',allowed:d.restartAllowed,reason:d.restartReason}));
    if(h.id==='cloud'&&id==='cloud-proxy')card.append(actionControl('proxy-restart',{label:'Restart DVR cloud proxy',allowed:d.proxyRestartAllowed,reason:d.proxyRestartReason}));
@@ -82,6 +97,11 @@ function render(d){
   }
   host.append(grid);root.append(host);
  }
+ const email=document.querySelector('#email-status');email.hidden=false;
+ const mode=d.alerts?.mode||'not_configured';const modeLabels={enabled:'SES email alerts enabled',disabled:'Email sending disabled',not_configured:'Email setup required',invalid_configuration:'Email configuration needs attention'};
+ email.replaceChildren(node('strong',modeLabels[mode]||'Email status unknown'),node('p','Red for 30 seconds → one email per incident. Muting suppresses email, not health checks.','sub'));
+ const recent=d.alerts?.events||[];
+ if(recent.length){const log=node('details');log.dataset.key='email-log';log.open=expanded.has('email-log');log.append(node('summary','Recent email notifications'));for(const e of recent)log.append(node('p',new Date(e.updated*1000).toLocaleString()+' · '+(names[e.component]||e.component)+' / '+e.host+' · '+e.state,'fact'));email.append(log)}
  const overview=document.querySelector('#overview');overview.replaceChildren();
  for(const [status,label] of [['green','Healthy'],['yellow','Degraded'],['red','Offline'],['unknown','Unknown']]){const metric=node('div',null,'metric');metric.append(node('strong',String(counts[status]),status),node('span',label));overview.append(metric)}
  const activity=document.querySelector('#activity');const signature=JSON.stringify(d.jobs||[]);
@@ -97,10 +117,12 @@ function render(d){
  }
  document.querySelector('#updated').textContent='Updated '+new Date().toLocaleTimeString();
  if(focused)Array.from(document.querySelectorAll('button[data-action]')).find(e=>e.dataset.action===focused)?.focus({preventScroll:true});
+ else if(focusedMute)Array.from(document.querySelectorAll('button[data-mute]')).find(e=>e.dataset.mute===focusedMute)?.focus({preventScroll:true});
  else if(focusedDetail)Array.from(document.querySelectorAll('details')).find(e=>e.dataset.key===focusedDetail)?.querySelector('summary')?.focus({preventScroll:true});
 }
 function clearStatus(message){
  document.querySelector('#hosts').replaceChildren();document.querySelector('#overview').hidden=true;document.querySelector('#activity-panel').hidden=true;
+ document.querySelector('#email-status').hidden=true;
  document.querySelector('#updated').textContent=message;document.querySelector('#backend-version').textContent=message;
 }
 let updating=false;

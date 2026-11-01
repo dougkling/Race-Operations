@@ -3,8 +3,9 @@ import argparse,hashlib,hmac,json,secrets,sqlite3,threading,time,re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit
-VERSION='0.8.0'
-COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0')
+VERSION='0.9.0'
+COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0','0.9.0')
+from email_alerts import AlertEngine
 from dvr_actions import ACTIONS as DVR_ACTIONS, guard as dvr_guard
 
 def action_host(action):return 'dvr' if action in DVR_ACTIONS else 'cloud'
@@ -16,6 +17,7 @@ class Store:
   self.db.execute('CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, actor TEXT, created REAL, state TEXT, pre TEXT, result TEXT)');self.db.execute('CREATE TABLE IF NOT EXISTS events (at REAL,id TEXT,state TEXT,result TEXT)');self.db.commit()
   if 'action' not in [r[1] for r in self.db.execute('PRAGMA table_info(jobs)')]:
    self.db.execute("ALTER TABLE jobs ADD COLUMN action TEXT NOT NULL DEFAULT 'pitwall-restart'");self.db.commit()
+  self.alerts=AlertEngine(self,Path(db_path).parent/'email-alerts.json')
  def audit(self,jid,state,result=''):
   self.db.execute('UPDATE jobs SET state=?,result=? WHERE id=?',(state,result,jid));self.db.execute('INSERT INTO events VALUES (?,?,?,?)',(time.time(),jid,state,result));self.db.commit()
  def jobs(self):
@@ -84,10 +86,10 @@ def make_server(config,db_path,port=None):
     with state.lock:
      s=self.session()
      if not s:return self.send(401,{'error':'Sign in required'})
-     hosts=[{'id':h['id'],'name':h['name'],'connected':time.time()-state.samples.get(h['id'],{}).get('received',0)<45,'sample':state.samples.get(h['id'])} for h in config['hosts']]
+     hosts=[{'id':h['id'],'name':h['name'],'connected':time.time()-state.samples.get(h['id'],{}).get('received',0)<45,'sample':state.samples.get(h['id']),'agentStatus':state.alerts.agent_status(h['id'])} for h in config['hosts']]
      allowed,reason=state.eligible()
      proxy_allowed,proxy_reason=state.eligible('proxy-restart')
-     return self.send(200,{'hosts':hosts,'csrf':s['csrf'],'restartAllowed':allowed,'restartReason':reason,'proxyRestartAllowed':proxy_allowed,'proxyRestartReason':proxy_reason,'dvrActions':{a:{'allowed':state.eligible(a)[0],'reason':state.eligible(a)[1],'label':v[1],'target':v[0]} for a,v in DVR_ACTIONS.items()},'jobs':state.jobs(),'version':VERSION})
+     return self.send(200,{'hosts':hosts,'csrf':s['csrf'],'restartAllowed':allowed,'restartReason':reason,'proxyRestartAllowed':proxy_allowed,'proxyRestartReason':proxy_reason,'dvrActions':{a:{'allowed':state.eligible(a)[0],'reason':state.eligible(a)[1],'label':v[1],'target':v[0]} for a,v in DVR_ACTIONS.items()},'jobs':state.jobs(),'version':VERSION,'alerts':state.alerts.summary()})
    return self.send(404,{'error':'Not found'})
   def do_POST(self):
    try:
@@ -97,6 +99,14 @@ def make_server(config,db_path,port=None):
       if not hmac.compare_digest(supplied,config['adminTokenHash']):return self.send(401,{'error':'Invalid token'})
       sid=secrets.token_urlsafe(32);state.sessions={k:v for k,v in state.sessions.items() if v['expires']>time.time()};state.sessions[sid]={'expires':time.time()+28800,'csrf':secrets.token_urlsafe(32),'actor':'administrator'}
       return self.send(200,{'ok':True},cookie='raceops='+sid+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800')
+     if self.path=='/api/monitor-mute':
+      s=self.session()
+      if not s:return self.send(401,{'error':'Sign in required'})
+      if not hmac.compare_digest(self.headers.get('X-CSRF-Token',''),s['csrf']):return self.send(403,{'error':'Invalid CSRF token'})
+      b=self.body()
+      if not isinstance(b.get('hostId'),str) or not isinstance(b.get('componentId'),str) or type(b.get('muted')) is not bool:return self.send(400,{'error':'Invalid monitor preference'})
+      state.alerts.set_mute(b['hostId'],b['componentId'],b['muted'],s['actor'])
+      return self.send(200,{'ok':True})
      if self.path in ('/api/actions/pitwall-restart','/api/actions/proxy-restart') or self.path in ['/api/actions/'+a for a in DVR_ACTIONS]:
       action=self.path.rsplit('/',1)[1]
       confirmation=DVR_ACTIONS[action][1] if action in DVR_ACTIONS else 'Restart DVR cloud proxy' if action=='proxy-restart' else 'Restart RaceBot + Commentator'
@@ -169,6 +179,7 @@ def make_server(config,db_path,port=None):
           value=c.get(key);clean[key]=value if type(value) in (int,float) and 0<=value<=2147483647 else None
         components.append(clean)
       state.samples[host['id']]={'received':time.time(),'components':components,'agentVersion':b.get('agentVersion') if b.get('agentVersion') in COMPATIBLE_AGENTS else 'older','capabilities':[a for a in DVR_ACTIONS if isinstance(b.get('capabilities'),list) and a in b['capabilities']] if host['id']=='dvr' else []}
+      state.alerts.seen(host['id'])
       commands=[]
       if b.get('agentVersion') in COMPATIBLE_AGENTS:
        rows=state.db.execute("SELECT id,created,action FROM jobs WHERE state='queued' ORDER BY created").fetchall()
@@ -185,4 +196,4 @@ def make_server(config,db_path,port=None):
    except sqlite3.Error:return self.send(503,{'error':'Audit store unavailable; action not confirmed'})
  server=ThreadingHTTPServer(('127.0.0.1',config['port'] if port is None else port),Handler);server.state=state;return server
 if __name__=='__main__':
- p=argparse.ArgumentParser();p.add_argument('--config',required=True);a=p.parse_args();cp=Path(a.config);cfg=json.loads(cp.read_text(encoding='utf-8'));make_server(cfg,cp.parent/'actions.sqlite3').serve_forever()
+ p=argparse.ArgumentParser();p.add_argument('--config',required=True);a=p.parse_args();cp=Path(a.config);cfg=json.loads(cp.read_text(encoding='utf-8'));server=make_server(cfg,cp.parent/'actions.sqlite3');server.state.alerts.start();server.serve_forever()

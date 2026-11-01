@@ -13,7 +13,7 @@ New-Item -ItemType Directory -Path $target | Out-Null
 # Protect application/config directory before creating secrets or tasks.
 & icacls.exe $target /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Failed to protect installation directory.' }
-Copy-Item "$PSScriptRoot\server.py","$PSScriptRoot\agent.py","$PSScriptRoot\setup.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\dvr_actions.py" $target
+Copy-Item "$PSScriptRoot\server.py","$PSScriptRoot\agent.py","$PSScriptRoot\setup.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\dvr_actions.py","$PSScriptRoot\email_alerts.py","$PSScriptRoot\Configure-SES.ps1" $target
 Copy-Item "$PSScriptRoot\web" $target -Recurse
 & $PythonPath "$target\setup.py"
 if ($LASTEXITCODE -ne 0) { throw 'Configuration generation failed.' }

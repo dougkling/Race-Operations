@@ -19,6 +19,13 @@ class Controls(unittest.TestCase):
  def beat(self,status='red',token='cloud-token',host='cloud'):
   return self.req('/api/heartbeat',{'hostId':host,'agentVersion':VERSION,'components':[{'id':'racebot','status':status},{'id':'commentator','status':'green'}]}, {'Authorization':'Bearer '+token})
  def request(self,csrf,jid=None):return self.req('/api/actions/pitwall-restart',{'requestId':jid or str(uuid.uuid4()),'confirmation':'Restart RaceBot + Commentator'},{'X-CSRF-Token':csrf})
+ def test_monitor_mute_api(self):
+  body={'hostId':'cloud','componentId':'racebot','muted':True}
+  self.assertEqual(self.req('/api/monitor-mute',body)[0],401)
+  csrf=self.login();self.assertEqual(self.req('/api/monitor-mute',body)[0],403)
+  self.assertEqual(self.req('/api/monitor-mute',body,{'X-CSRF-Token':csrf})[0],200)
+  self.assertTrue(self.s.state.alerts.muted('cloud','racebot'))
+  body['muted']='false';self.assertEqual(self.req('/api/monitor-mute',body,{'X-CSRF-Token':csrf})[0],400)
  def test_auth_csrf_and_health_guards(self):
   self.assertEqual(self.request('bad')[0],401);csrf=self.login();self.assertEqual(self.request('bad')[0],403);self.assertEqual(self.request(csrf)[0],409)
   self.beat('green');self.assertEqual(self.request(csrf)[0],409)
