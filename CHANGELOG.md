@@ -44,3 +44,7 @@
 ## 0.8.0
 
 DVR recovery: Judge Cues, Review Status, IIS, uploader, discovered connector, and verified interactive OBS launch. Adds on-demand health-check execution, five-minute scheduling, 15-minute report freshness, per-host action routing, persistent deduplication, and recording guards. Windows rollout remains operator-verified.
+
+## Dashboard UI 0.8.1
+
+Commentator Desk charcoal/gold styling, responsive service cards, adjacent recovery controls, collapsible diagnostics, status overview and readable activity cards. Cloud web files only; backend and DVR agent remain 0.8.0.
