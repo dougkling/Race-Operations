@@ -1,0 +1,142 @@
+[
+  {
+    "original_commit": "7bf5b8b2edc1d9f6185a9c3349f1d73a66763fc8",
+    "original_date": "2026-10-29T06:08:44Z",
+    "message": "Add Race Operations cloud management and persistent DVR OBS monitoring\n\nImport cloud backend/agent 0.3.2 and DVR agent 0.3.3 with deployment scripts, tests, credential exclusions and documented live validation status.",
+    "tag": "source-revision/7bf5b8b2edc1",
+    "files": 21,
+    "local_bundle_import_commit": "2a46051b215da0b32ebd66c92bef7b4640210579",
+    "remote_import_commit": "174f7068a484b6bb63aa879ec43343a2c5c98e69",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "9a48024ae160247d0393d898253bfb083777c565",
+    "original_date": "2026-10-29T06:13:31Z",
+    "message": "Monitor uploader task heartbeat and recent operations\n\nUse observed UTC heartbeat cadence and most recently modified log, sanitize projected evidence, preserve existing OBS session and recovery behavior.",
+    "tag": "source-revision/9a48024ae160",
+    "files": 24,
+    "local_bundle_import_commit": "af55b1a14a8b8a819f2c74f2aba386111af4dddc",
+    "remote_import_commit": "e18a2307d5f3598a62b972facf3e26421f20f6fe",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "e3052d437a4116ac1f5ddfa8961de7599286f1d3",
+    "original_date": "2026-10-29T06:27:21Z",
+    "message": "Monitor cloud-observed DVR connector state in Race Operations v0.4.1",
+    "tag": "source-revision/e3052d437a41",
+    "files": 27,
+    "local_bundle_import_commit": "78fa59da2f099a406d8ce1dbc4bde1aedd6e7197",
+    "remote_import_commit": "bee9b75ac6498c38745c42b01cd979ed94068bf2",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "abf6838e96052c5eefa970e09d58fb5507c907ed",
+    "original_date": "2026-10-29T16:28:40Z",
+    "message": "Fix uploader local-time heartbeat age in DVR agent v0.4.2",
+    "tag": "source-revision/abf6838e9605",
+    "files": 28,
+    "local_bundle_import_commit": "3f76b05cfc0e5a985c6c0259cd9d3aa8b7e0f367",
+    "remote_import_commit": "097978a17ade695bd63f6787c3c904029393e75b",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "f282ca03972648557f70af0604e01b1e2525e7b2",
+    "original_date": "2026-10-29T18:19:19Z",
+    "message": "Add cloud and DVR disk capacity monitoring v0.5.0",
+    "tag": "source-revision/f282ca039726",
+    "files": 32,
+    "local_bundle_import_commit": "4e82bde0c9d656da5d9b8e76b0bc944991ea1172",
+    "remote_import_commit": "82a65f526462a1944e6953033c4bebc7369fe435",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "26340547c0e5c3740486980347c52970be166d41",
+    "original_date": "2026-10-29T19:48:01Z",
+    "message": "Observe DVR scheduled health reports in v0.6.0",
+    "tag": "source-revision/26340547c0e5",
+    "files": 35,
+    "local_bundle_import_commit": "e3aba73398de35def8babc9b833a141d7be4b3c1",
+    "remote_import_commit": "2997e06e62170963649da5eb1646d06404d3b150",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "5ed501232183cbe8c4a909d4d0f0501ef9694da0",
+    "original_date": "2026-10-29T20:54:19Z",
+    "message": "Monitor public Pilot Review page manifest and video samples v0.7.0",
+    "tag": "source-revision/5ed501232183",
+    "files": 38,
+    "local_bundle_import_commit": "05d61412b466dc1b0a5f8048c3ddb9a806f77ae9",
+    "remote_import_commit": "9fff7c87335e7346eda0260afe7f8d73c3ec6cef",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "2f71b6c3f267e8445a71ad26c64b2c34048e2332",
+    "original_date": "2026-10-30T01:45:01Z",
+    "message": "Add guarded DVR recovery controls and recurring health reports",
+    "tag": "source-revision/2f71b6c3f267",
+    "files": 47,
+    "local_bundle_import_commit": "11e0e93ebb2f4ceb52d5476705ed10ed0e28ef46",
+    "remote_import_commit": "afdf2af6473362e8e5beefb4e93fc02dd181a291",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "ad372881986dcab44a1b08e2ab077a73e2be8a93",
+    "original_date": "2026-10-30T05:33:17Z",
+    "message": "Restyle dashboard to match Commentator Desk and fix mobile layout",
+    "tag": "source-revision/ad372881986d",
+    "files": 51,
+    "local_bundle_import_commit": "e453c2ecfd4455419014bab19a0611a3213c1e56",
+    "remote_import_commit": "475eb3a27020e48c00528784d5b18b02bbebc758",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "c91e7bf7955f27a5634feea7165032bafab06537",
+    "original_date": "2026-10-30T05:37:13Z",
+    "message": "Use explicit File.Replace backup path for Windows PowerShell",
+    "tag": "source-revision/c91e7bf7955f",
+    "files": 51,
+    "local_bundle_import_commit": "4463eb870ecf979e2d3ff9087af2a5819433e215",
+    "remote_import_commit": "b9cd3d74e2e9e4e73ece42391d58ba9c2a431910",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "7189e66fd1f461e3989bb6c5d07d139b78030869",
+    "original_date": "2026-10-30T12:26:10Z",
+    "message": "Add persistent monitor mutes and SES red incident notifications",
+    "tag": "source-revision/7189e66fd1f4",
+    "files": 56,
+    "local_bundle_import_commit": "080ec51aff311b8e7903b95da90ea5903199bc88",
+    "remote_import_commit": "eb0934ca4d795c87d07cd0fad6c3559eece6c205",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "80a26a336648efcd3e6f209190b6085d29c0db7a",
+    "original_date": "2026-10-31T01:31:26Z",
+    "message": "Restyle dashboard as host-scoped NOC service racks with inline mute switches",
+    "tag": "source-revision/80a26a336648",
+    "files": 56,
+    "local_bundle_import_commit": "c096c3e740dbb1b7f3c9f0d88de97ab1736a021e",
+    "remote_import_commit": "7da0a3785694adfa4cab731274c185dda9b6cbcb",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "079cb01b7515dbb35aaef9bb63fcbfb0e3356d41",
+    "original_date": "2026-10-31T01:31:53Z",
+    "message": "Reserve separate greyed scoring PC integration section",
+    "tag": "source-revision/079cb01b7515",
+    "files": 56,
+    "local_bundle_import_commit": "e8b061c98fb2df5c77164d7f2e6cf36650f5bec8",
+    "remote_import_commit": "3b3985e8a31869e7e3d6d166e9e38754fbbc3632",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  },
+  {
+    "original_commit": "bceae031a8428c77b5c4d045b932ab643df25065",
+    "original_date": "2026-10-31T01:48:48Z",
+    "message": "Add live topology map with monitor navigation and saved collapse (UI 0.9.2)",
+    "tag": "source-revision/bceae031a842",
+    "files": 57,
+    "local_bundle_import_commit": "11641be8e560cc3d35214158b1bc72d840bc7052",
+    "remote_import_commit": "b47bcb546c1d0a6de5382359e190500ca79f0011",
+    "tag_location": "local handoff bundle; remote tag creation pending"
+  }
+]
