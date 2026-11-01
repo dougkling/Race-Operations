@@ -11,7 +11,7 @@ foreach($name in $files){
  if(-not (Test-Path (Join-Path $target $name))){throw "Installed dashboard file missing: $name"}
  if((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne $manifest.$name){throw "Package validation failed: $name"}
 }
-$backup=Join-Path 'C:\ProgramData\RaceOperations\backups' ('dashboard-before-v0.9.1-'+(Get-Date -Format yyyyMMdd-HHmmss))
+$backup=Join-Path 'C:\ProgramData\RaceOperations\backups' ('dashboard-before-v0.9.2-'+(Get-Date -Format yyyyMMdd-HHmmss))
 New-Item -ItemType Directory -Path $backup -Force | Out-Null
 foreach($name in $files){Copy-Item (Join-Path $target $name) $backup}
 try{
@@ -20,7 +20,7 @@ try{
   Copy-Item (Join-Path "$PSScriptRoot\web" $name) $staged -Force
   [IO.File]::Replace($staged,(Join-Path $target $name),(Join-Path $backup ($name+'.replaced')))
  }
- Write-Host 'Dashboard UI updated to 0.9.1. Refresh desktop and mobile browsers.'
+ Write-Host 'Dashboard UI updated to 0.9.2. Refresh desktop and mobile browsers.'
  Write-Host 'Use Ctrl+F5 on desktop. No services or applications were restarted.'
  Write-Host "Backup: $backup"
 }catch{

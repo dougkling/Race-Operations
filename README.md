@@ -6,10 +6,12 @@ Windows management dashboard and outbound DVR monitoring agent for RaceBot, Comm
 
 | Part | Version | Purpose |
 | --- | --- | --- |
-| Cloud dashboard/backend/agent | 0.7.0 | Health reporting, shared RaceBot + Commentator recovery, independent DVR cloud proxy recovery |
-| OBS/DVR agent | 0.7.0 | Judge Cues, Review Status, IIS, persistent OBS and uploader task/log monitoring |
+| Cloud dashboard UI | 0.9.2 | NOC layout, live topology, monitor links, inline mute switches and distinct PC sections |
+| Cloud backend | 0.9.0 | Health reporting, guarded recovery, persistent monitor mutes and SES red alerts |
+| Cloud agent | 0.7.0 | Cloud service and disk-capacity observations |
+| OBS/DVR agent | 0.8.0 | Component monitoring, scheduled health checks and guarded recovery controls |
 
-The DVR agent sends compatibility agentVersion 0.3.0 to the backend and records its own 0.7.0 package version in local status. Both are deliberate.
+UI, backend and agent versions are independent. DVR recovery requires the v0.8.0 agent and its advertised action capabilities.
 
 ## Layout
 
@@ -82,3 +84,7 @@ Pilot Review monitoring: [docs/pilot-review-v0.7.0.md](docs/pilot-review-v0.7.0.
 ## DVR recovery v0.8.0
 
 See [DVR controls and rollout](docs/dvr-controls-v0.8.0.md). The DVR agent now supports fixed, operator-confirmed recovery actions; older descriptions of the agent as monitoring-only apply through v0.7.0.
+
+## Dashboard live map v0.9.2
+
+See [live map and UI-only rollout](docs/dashboard-map-v0.9.2.md). The map instruments all 15 current monitors using the same evidence as the rows below, with clickable detail links and a remembered collapse setting. Requires cloud backend v0.9.0; update the cloud web files only.
