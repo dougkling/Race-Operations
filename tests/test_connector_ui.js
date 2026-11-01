@@ -7,3 +7,6 @@ function check(connected,status,value,expected){const result=context.connectorEv
 assert.match(check(true,'green',true,'green').detail,/Remote judges: 0/);
 check(true,'green',false,'red');check(true,'red',true,'unknown');check(false,'green',true,'unknown');check(true,'green','true','unknown');assert.equal(context.connectorEvidence([]).status,'unknown');
 console.log('Connector UI evidence checks passed');
+assert.equal(context.diskDetail(null),'Disk capacity unavailable');
+assert.match(context.diskDetail({freeBytes:72.4*1073741824,totalBytes:99*1073741824,freePercent:73.2}),/72.4 GiB free \/ 99.0 GiB \(73.2%\)/);
+console.log('Disk display checks passed');

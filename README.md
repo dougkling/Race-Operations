@@ -6,10 +6,10 @@ Windows management dashboard and outbound DVR monitoring agent for RaceBot, Comm
 
 | Part | Version | Purpose |
 | --- | --- | --- |
-| Cloud dashboard/backend/agent | 0.4.1 | Health reporting, shared RaceBot + Commentator recovery, independent DVR cloud proxy recovery |
-| OBS/DVR agent | 0.4.2 | Judge Cues, Review Status, IIS, persistent OBS and uploader task/log monitoring |
+| Cloud dashboard/backend/agent | 0.5.0 | Health reporting, shared RaceBot + Commentator recovery, independent DVR cloud proxy recovery |
+| OBS/DVR agent | 0.5.0 | Judge Cues, Review Status, IIS, persistent OBS and uploader task/log monitoring |
 
-The DVR agent sends compatibility agentVersion 0.3.0 to the backend and records its own 0.4.2 package version in local status. Both are deliberate.
+The DVR agent sends compatibility agentVersion 0.3.0 to the backend and records its own 0.5.0 package version in local status. Both are deliberate.
 
 ## Layout
 
@@ -72,3 +72,5 @@ Cloud connector observation and rollout: [docs/connector-monitor-v0.4.1.md](docs
 Deployment workflow: keep source current in GitHub and also provide versioned deployment ZIPs. Windows PCs do not require Git.
 
 Uploader local-time correction: [docs/uploader-time-fix-v0.4.2.md](docs/uploader-time-fix-v0.4.2.md).
+
+Disk monitoring release: [docs/disk-monitor-v0.5.0.md](docs/disk-monitor-v0.5.0.md).

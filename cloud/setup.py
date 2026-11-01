@@ -4,7 +4,7 @@ from pathlib import Path
 root=Path(__file__).parent; folder=root/'config';folder.mkdir(exist_ok=True)
 if any(folder.iterdir()): raise SystemExit('Existing config found; no changes made.')
 admin=secrets.token_urlsafe(32)
-profiles={'cloud':[('racebot',8765),('commentator',8766),('cloud-proxy',None)],'dvr':[('judge-cues',8766),('review-status',8765),('iis',80),('obs',None),('uploader',None),('connector',None),('disk-network',None),('pilot-review',None),('scoring',None),('health-monitor',None)]}
+profiles={'cloud':[('racebot',8765),('commentator',8766),('cloud-proxy',None),('disk-space',None)],'dvr':[('judge-cues',8766),('review-status',8765),('iis',80),('obs',None),('uploader',None),('connector',None),('disk-network',None),('pilot-review',None),('scoring',None),('health-monitor',None)]}
 hosts=[]
 for host,entries in profiles.items():
  token=secrets.token_urlsafe(32); components=[]

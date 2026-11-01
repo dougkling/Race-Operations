@@ -44,3 +44,7 @@ Operator verified proxy 1.0.2 reports dvrConnected=true and remoteJudges=0. Clou
 ## Live rollout and uploader time correction
 
 Operator installed cloud 0.4.1 and DVR 0.4.0 successfully; heartbeat accepted. Screenshot confirms connector Healthy with zero judges, OBS connected/idle, and other enabled HTTP checks Healthy. Uploader showed 243 minutes despite a recent local log write. Local/UTC comparison confirms local wall time mislabeled Z. DVR 0.4.2 source corrects parsing; live fix verification pending.
+
+## Disk monitoring v0.5.0
+
+Operator verified uploader v0.4.2 now green. Cloud C: expanded to 99 GiB / 72.4 free (73.2%); DVR C: 231.8 GiB / 67.9 free (29.3%). Recording path confirmed C:/DVR. Disk capacity source added for both hosts; Windows deployment pending. Network monitoring remains pending separately.

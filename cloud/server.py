@@ -3,8 +3,8 @@ import argparse,hashlib,hmac,json,secrets,sqlite3,threading,time,re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit
-VERSION='0.4.1'
-COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1')
+VERSION='0.5.0'
+COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0')
 class Store:
  def __init__(self,config,db_path):
   self.config=config;self.lock=threading.RLock();self.samples={};self.sessions={}
@@ -109,6 +109,14 @@ def make_server(config,db_path,port=None):
       for c in b.get('components',[]):
        if isinstance(c,dict) and c.get('id') in allowed:
         clean={'id':c['id'],'status':c.get('status') if c.get('status') in ('green','yellow','red','unknown') else 'unknown','latencyMs':c.get('latencyMs') if isinstance(c.get('latencyMs'),(float,int)) else None}
+        if (host['id'],c['id']) in (('cloud','disk-space'),('dvr','disk-network')):
+         total=c.get('totalBytes');free=c.get('freeBytes')
+         valid=type(total) is int and type(free) is int and 0<total<=2**60 and 0<=free<=total
+         clean.update(totalBytes=total if valid else None,freeBytes=free if valid else None,freePercent=round(100*free/total,1) if valid else None)
+         if valid:
+          percent=100*free/total
+          clean['status']='red' if free<2*1024**3 or percent<5 else 'yellow' if free<10*1024**3 or percent<15 else 'green'
+         else:clean['status']='unknown'
         if host['id']=='cloud' and c['id']=='cloud-proxy':
          clean['dvrConnected']=c.get('dvrConnected') if type(c.get('dvrConnected')) is bool else None
          count=c.get('remoteJudges');clean['remoteJudges']=count if type(count) is int and 0<=count<=100000 else None

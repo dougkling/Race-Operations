@@ -1,11 +1,13 @@
 """Windows agent: fixed PitWall restart with durable at-most-once execution."""
 import argparse,json,time,urllib.request,urllib.error,sqlite3,subprocess,os,threading
 from pathlib import Path
+from disk_monitor import sample as disk_sample
 from urllib.parse import urlparse
 
 def collect(config):
     result=[]
     for c in config['components']:
+        if c['id']=='disk-space':continue
         row={'id':c['id'],'status':'unknown'}
         if c.get('enabled') and c.get('probe')=='http':
             u=urlparse(c['url'])
@@ -29,9 +31,10 @@ def collect(config):
                 row['latencyMs']=round((time.monotonic()-start)*1000)
             except (OSError,ValueError): row['status']='red'
         result.append(row)
+    result.append(disk_sample('disk-space'))
     return {'hostId':config['hostId'],'components':result}
 
-VERSION='0.4.1'
+VERSION='0.5.0'
 MANAGER=r'C:\Program Files\PitWall\manager\PitWall.ps1'
 POWERSHELL=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 
