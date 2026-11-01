@@ -48,3 +48,7 @@ Operator installed cloud 0.4.1 and DVR 0.4.0 successfully; heartbeat accepted. S
 ## Disk monitoring v0.5.0
 
 Operator verified uploader v0.4.2 now green. Cloud C: expanded to 99 GiB / 72.4 free (73.2%); DVR C: 231.8 GiB / 67.9 free (29.3%). Recording path confirmed C:/DVR. Disk capacity source added for both hosts; Windows deployment pending. Network monitoring remains pending separately.
+
+## Health-check observation v0.6.0
+
+Disk monitoring v0.5.0 verified by operator. Existing health checker and wrapper succeeded interactively; SYSTEM task rerun returned 0 with fresh log. Source now observes task/report without altering schedule or executing checks. Expected current result: warnings, not application outage. Live v0.6.0 rollout pending.

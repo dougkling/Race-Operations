@@ -30,7 +30,7 @@ if (Test-Path $db) {
  if ($LASTEXITCODE -ne 0) { throw 'Resolve the pending action before updating.' }
 }
 # Copy the files/config to an inherited protected backup folder; do not regenerate tokens.
-$backup = Join-Path $target ('backups\before-v0.5.0-' + (Get-Date -Format yyyyMMdd-HHmmss))
+$backup = Join-Path $target ('backups\before-v0.6.0-' + (Get-Date -Format yyyyMMdd-HHmmss))
 New-Item -ItemType Directory -Path $backup -Force | Out-Null
 Copy-Item "$target\server.py","$target\agent.py" $backup
 if (Test-Path "$target\disk_monitor.py") { Copy-Item "$target\disk_monitor.py" $backup }
@@ -62,10 +62,10 @@ try {
  $healthy = $false
  for ($i=0; $i -lt 20; $i++) {
   Start-Sleep -Seconds 1
-  try { $h = Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 2; if ($h.ok -and $h.version -eq '0.5.0') { $healthy=$true; break } } catch {}
+  try { $h = Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 2; if ($h.ok -and $h.version -eq '0.6.0') { $healthy=$true; break } } catch {}
  }
  if (-not $healthy) { throw 'Updated backend did not pass its startup check.' }
- Write-Host 'Updated to v0.5.0. Refresh dashboard with Ctrl+F5 and sign in again.'
+ Write-Host 'Updated to v0.6.0. Refresh dashboard with Ctrl+F5 and sign in again.'
  Write-Host 'Each restart control is disabled while its target is green. A failing health check enables that control.'
  Write-Host "Backup: $backup"
  Write-Host 'No RaceBot, Commentator or DVR application was restarted by this update.'

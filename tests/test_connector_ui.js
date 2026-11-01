@@ -10,3 +10,6 @@ console.log('Connector UI evidence checks passed');
 assert.equal(context.diskDetail(null),'Disk capacity unavailable');
 assert.match(context.diskDetail({freeBytes:72.4*1073741824,totalBytes:99*1073741824,freePercent:73.2}),/72.4 GiB free \/ 99.0 GiB \(73.2%\)/);
 console.log('Disk display checks passed');
+assert.equal(context.healthDetail(null),'Health-check evidence unavailable');
+assert.match(context.healthDetail({healthReason:'warnings',taskState:'Ready',lastTaskResult:0,reportAgeSeconds:60,passes:23,warnings:3,failures:0,warningChecks:['Graphics race source']}),/23 pass, 3 warning, 0 failure/);
+console.log('Health-report display checks passed');
