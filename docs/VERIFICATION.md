@@ -22,3 +22,10 @@ See OPEN_ITEMS.md for publication, native validation and product gaps. Do not ma
 - Local documentation links, Git whitespace checks, UI manifest hashes, identical action catalogs and tracked-source credential patterns passed.
 - A fallback headless Chromium package also could not initialize in this environment (`EINVAL` during font extraction). Fresh browser validation remains pending; this does not supersede the historical UI test result.
 - Package ZIP integrity and repeat-build hashes are checked during handoff packaging; BUILD.json records the exact source commit and whether tracked changes were present.
+
+## GitHub publication checks
+
+- The full imported historical source tree matches local Git tree `38741f50c2f604518e5a09f58a16d6b985f3873f`. The initial documentation/source PR tree matches `9b6cf45689b473f971dd67041983110ead854fb2`.
+- Windows PowerShell parsing passed in GitHub Actions run 41332218697 on the initial import PR head. This validates syntax only, not deployment or recovery execution.
+- Source-tag automation passed an isolated local Git-remote test: creation, repeat-run idempotence, and refusal to overwrite an existing tag.
+- The portable/browser GitHub job is still pending at this documentation revision; consult the PR checks for its final result.
