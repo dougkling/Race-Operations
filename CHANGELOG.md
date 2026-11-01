@@ -1,3 +1,7 @@
+# Publication compatibility correction — 2026-11-01
+
+- Normalize .NET seven-digit manifest timestamps to microseconds before parsing, fixing Pilot Review on the documented Python 3.10 minimum. Existing sample/age tests cover the production timestamp format.
+
 # Changelog
 
 ## Standalone repository preparation — 2026-11-01

@@ -29,3 +29,5 @@ See OPEN_ITEMS.md for publication, native validation and product gaps. Do not ma
 - Windows PowerShell parsing passed in GitHub Actions run 41332218697 on the initial import PR head. This validates syntax only, not deployment or recovery execution.
 - Source-tag automation passed an isolated local Git-remote test: creation, repeat-run idempotence, and refusal to overwrite an existing tag.
 - The portable/browser GitHub job is still pending at this documentation revision; consult the PR checks for its final result.
+
+- Initial GitHub Python 3.10 validation exposed six Pilot Review failures caused by seven-digit .NET fractional timestamps. The parser now normalizes to six microsecond digits; the existing manifest/sample tests are rerun in CI. This is a compatibility fix, not a new live deployment.
