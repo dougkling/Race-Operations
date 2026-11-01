@@ -78,3 +78,7 @@ Disk monitoring release: [docs/disk-monitor-v0.5.0.md](docs/disk-monitor-v0.5.0.
 Health-check observation: [docs/health-monitor-v0.6.0.md](docs/health-monitor-v0.6.0.md).
 
 Pilot Review monitoring: [docs/pilot-review-v0.7.0.md](docs/pilot-review-v0.7.0.md).
+
+## DVR recovery v0.8.0
+
+See [DVR controls and rollout](docs/dvr-controls-v0.8.0.md). The DVR agent now supports fixed, operator-confirmed recovery actions; older descriptions of the agent as monitoring-only apply through v0.7.0.

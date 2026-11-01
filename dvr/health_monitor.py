@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 REPORT=Path(r'C:\ProgramData\RaceDvrHealthMonitor\Logs\RaceDvr-Health-Latest.log')
 PS=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
-MAX_AGE=86400
+MAX_AGE=900
 CHECK_NAMES=('Judge Cues health endpoint','Graphics race source','Heat tracking arm state','S3 manifest','OBS WebSocket','Review Status integration','Uploader log freshness','DVR disk space','Race Review file','IIS Race Review HTTP','Uploader process','Uploader configuration','Recording layout metadata')
 REASONS=('healthy','warnings','failed','running','disabled','stale','report_missing','report_invalid','report_mismatch','task_unknown','clock_warning')
 

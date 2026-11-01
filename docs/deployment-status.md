@@ -56,3 +56,7 @@ Disk monitoring v0.5.0 verified by operator. Existing health checker and wrapper
 ## Pilot Review v0.7.0
 
 Operator verified page and BOM-prefixed manifest HTTP 200; schema fields version/generatedAt/races. Current and archived sample HEAD responses are video/mp4 and exactly match manifest sizes. Source now monitors these from DVR background worker. Live v0.7.0 rollout pending. Health report v0.6.0 verified fresh with 24 passes, 2 warnings; installed checker version default manually changed to 1.7.14 by operator (not part of management-agent source).
+
+## DVR controls v0.8.0
+
+Operator confirmed the health report refreshed and cleared the arm warning after a scheduled run; the task previously had only a boot trigger. Operator added a five-minute repeat successfully. v0.8.0 codifies that schedule, marks reports stale after 15 minutes and adds DVR recovery controls. Prior monitoring-only statements describe earlier releases. Scoring PC unavailable: monitoring/control deferred. New Windows control execution is not yet live-verified; see `dvr-controls-v0.8.0.md` for rollout and limits.

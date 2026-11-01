@@ -19,7 +19,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Python 3.10+ is required.' }
 if ($LASTEXITCODE -ne 0) { throw 'Agent syntax check failed.' }
 # Only public health fields; no enrollment token is sent in this preflight.
 $health = Invoke-RestMethod 'http://98.84.103.79/health' -TimeoutSec 10
-if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0')) { throw 'Expected compatible cloud backend was not reachable.' }
+if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0')) { throw 'Expected compatible cloud backend was not reachable.' }
 Write-Host 'This agent uses your current HTTP cloud endpoint. The DVR bearer token travels unencrypted.'
 Write-Host 'Paste the DVR agent token, NOT the dashboard administrator token. It will not be displayed.'
 $secure = Read-Host 'DVR agent token' -AsSecureString
@@ -29,7 +29,7 @@ if ($token.Length -lt 20) { throw 'Token is too short.' }
 New-Item -ItemType Directory -Path $target | Out-Null
 & icacls.exe $target /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Failed to protect installation folder. Agent not installed.' }
-Copy-Item "$PSScriptRoot\dvr-agent.py","$PSScriptRoot\obs_monitor.py","$PSScriptRoot\uploader_monitor.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\health_monitor.py","$PSScriptRoot\pilot_monitor.py" $target
+Copy-Item "$PSScriptRoot\dvr-agent.py","$PSScriptRoot\obs_monitor.py","$PSScriptRoot\uploader_monitor.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\health_monitor.py","$PSScriptRoot\pilot_monitor.py","$PSScriptRoot\dvr_actions.py","$PSScriptRoot\dvr_control.py","$PSScriptRoot\obs_recovery_guard.py","$PSScriptRoot\Invoke-DVR-Recovery.ps1","$PSScriptRoot\Invoke-OBS-Recovery.ps1" $target
 $config = @{hostId='dvr';serverUrl='http://98.84.103.79';allowHttp=$true;token=$token}
 [System.IO.File]::WriteAllText("$target\config.json",($config | ConvertTo-Json),[System.Text.UTF8Encoding]::new($false))
 $token=$null; $config=$null; $secure=$null
@@ -44,3 +44,5 @@ Start-ScheduledTask -TaskName $taskName
 Write-Host 'Installed. DVR agent starts at boot without login. Check cloud dashboard in about 15 seconds.'
 Write-Host 'Judge Cues, Review Status and IIS HTTP checks plus OBS and uploader read-only monitoring are enabled. No application was changed or restarted.'
 Write-Host "Sanitized agent status: $target\status.json"
+
+Write-Host 'Run Update-DVR-Agent.ps1 after enrollment to discover and enable recovery controls.'

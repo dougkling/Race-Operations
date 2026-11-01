@@ -40,3 +40,7 @@
 
 - Cloud dashboard, token sign-in, host-scoped heartbeats and disabled component inventory.
 - Explicit UTF-8 file reads fixed Windows script serving.
+
+## 0.8.0
+
+DVR recovery: Judge Cues, Review Status, IIS, uploader, discovered connector, and verified interactive OBS launch. Adds on-demand health-check execution, five-minute scheduling, 15-minute report freshness, per-host action routing, persistent deduplication, and recording guards. Windows rollout remains operator-verified.
