@@ -27,7 +27,7 @@ function connectorEvidence(hosts){
   'Cloud connection evidence unavailable'};
 }
 let csrf="",sending=false,actionTarget="pitwall-restart",dvrActions={};
-const names={'agent-link':'Agent connection','racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'DVR Control Server','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'Disk space · C:\\DVR','pilot-review':'Pilot Review','scoring':'Scoring Stream Deck Client','health-monitor':'System Health Check'};const ids={cloud:['agent-link','racebot','commentator','cloud-proxy','disk-space'],dvr:['agent-link','obs','judge-cues','scoring','review-status','iis','uploader','connector','disk-network','pilot-review','health-monitor']};
+const names={'agent-link':'Agent connection','racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'DVR Control Server','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'Disk space · C:\\DVR','pilot-review':'Pilot Review','scoring':'Scoring Stream Deck Client','health-monitor':'System Health Check'};const ids={cloud:['agent-link','racebot','commentator','cloud-proxy','disk-space'],dvr:['agent-link','obs','judge-cues','review-status','iis','uploader','connector','disk-network','pilot-review','health-monitor']};
 function node(tag,text,cls){const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e}
 function serviceDetail(id,c,h){
  if(id==='agent-link')return c.status==='red'?'No recent agent heartbeat':c.status==='green'?'Receiving agent heartbeats':'Waiting for agent evidence';
@@ -103,6 +103,14 @@ function render(d){
   }
   host.append(grid);root.append(host);
  }
+ const scoring=node('section',null,'host host-scoring');scoring.id='host-scoring';
+ const scoringHead=node('div',null,'host-head'),scoringTitle=node('div',null,'host-title');
+ scoringTitle.append(node('p','03 / SCORING WORKSTATION','eyebrow'),node('h2','SCORING PC'),node('p','Reserved for scoring workstation integration','host-description'));
+ scoringHead.append(scoringTitle,node('span','Not configured','badge unknown'));scoring.append(scoringHead);
+ for(const label of ['Management agent','Stream Deck plugin','Scoring control client']){
+  const row=node('div',null,'pending-row');row.append(node('h3',label),node('span','Pending setup','pending-state'),node('p','Monitoring and controls will be enabled after integration.','service-summary'));scoring.append(row)
+ }
+ root.append(scoring);
  const email=document.querySelector('#email-status');email.hidden=false;
  const mode=d.alerts?.mode||'not_configured';const modeLabels={enabled:'SES email alerts enabled',disabled:'Email sending disabled',not_configured:'Email setup required',invalid_configuration:'Email configuration needs attention'};
  email.replaceChildren(node('strong',modeLabels[mode]||'Email status unknown'),node('p','Red for 30 seconds → one email per incident. Muting suppresses email, not health checks.','sub'));
