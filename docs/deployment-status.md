@@ -52,3 +52,7 @@ Operator verified uploader v0.4.2 now green. Cloud C: expanded to 99 GiB / 72.4 
 ## Health-check observation v0.6.0
 
 Disk monitoring v0.5.0 verified by operator. Existing health checker and wrapper succeeded interactively; SYSTEM task rerun returned 0 with fresh log. Source now observes task/report without altering schedule or executing checks. Expected current result: warnings, not application outage. Live v0.6.0 rollout pending.
+
+## Pilot Review v0.7.0
+
+Operator verified page and BOM-prefixed manifest HTTP 200; schema fields version/generatedAt/races. Current and archived sample HEAD responses are video/mp4 and exactly match manifest sizes. Source now monitors these from DVR background worker. Live v0.7.0 rollout pending. Health report v0.6.0 verified fresh with 24 passes, 2 warnings; installed checker version default manually changed to 1.7.14 by operator (not part of management-agent source).

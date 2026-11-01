@@ -13,3 +13,7 @@ console.log('Disk display checks passed');
 assert.equal(context.healthDetail(null),'Health-check evidence unavailable');
 assert.match(context.healthDetail({healthReason:'warnings',taskState:'Ready',lastTaskResult:0,reportAgeSeconds:60,passes:23,warnings:3,failures:0,warningChecks:['Graphics race source']}),/23 pass, 3 warning, 0 failure/);
 console.log('Health-report display checks passed');
+assert.equal(context.pilotDetail(null),'Pilot Review evidence unavailable');
+assert.match(context.pilotDetail({pilotReason:'healthy',pageOk:true,manifestOk:true,raceCount:339,currentVideo:'pass',archivedVideo:'pass',manifestAgeSeconds:86400}),/Races: 339/);
+assert.match(context.pilotDetail({pilotReason:'healthy',currentVideo:'absent',archivedVideo:'absent'}),/No entries/);
+console.log('Pilot Review display checks passed');

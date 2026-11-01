@@ -3,8 +3,8 @@ import argparse,hashlib,hmac,json,secrets,sqlite3,threading,time,re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit
-VERSION='0.6.0'
-COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0')
+VERSION='0.7.0'
+COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0')
 class Store:
  def __init__(self,config,db_path):
   self.config=config;self.lock=threading.RLock();self.samples={};self.sessions={}
@@ -123,6 +123,12 @@ def make_server(config,db_path,port=None):
         if host['id']=='dvr' and c['id']=='obs':
          for key in ('obsConnected','recording','recordingPaused'):clean[key]=c.get(key) if type(c.get(key)) is bool else None
          duration=c.get('recordingSeconds');clean['recordingSeconds']=duration if type(duration) in (int,float) and 0<=duration<31536000 else None
+        if host['id']=='dvr' and c['id']=='pilot-review':
+         clean['pilotReason']=c.get('pilotReason') if c.get('pilotReason') in ('checking','unavailable','stale','manifest_unavailable','page_unavailable','clock_warning','video_failed','healthy') else 'unavailable'
+         for key in ('pageOk','manifestOk'):clean[key]=c.get(key) if type(c.get(key)) is bool else None
+         for key in ('raceCount','manifestAgeSeconds','lastCheckedEpoch'):
+          value=c.get(key);clean[key]=value if type(value) is int and 0<=value<=4294967295 else None
+         for key in ('currentVideo','archivedVideo'):clean[key]=c.get(key) if c.get(key) in ('pass','failed','absent','unknown') else 'unknown'
         if host['id']=='dvr' and c['id']=='health-monitor':
          clean['taskState']=c.get('taskState') if c.get('taskState') in ('Ready','Running','Disabled','Queued','unknown') else 'unknown'
          clean['healthReason']=c.get('healthReason') if c.get('healthReason') in ('healthy','warnings','failed','running','disabled','stale','report_missing','report_invalid','report_mismatch','task_unknown','clock_warning') else 'task_unknown'

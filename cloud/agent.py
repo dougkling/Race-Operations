@@ -34,7 +34,7 @@ def collect(config):
     result.append(disk_sample('disk-space'))
     return {'hostId':config['hostId'],'components':result}
 
-VERSION='0.6.0'
+VERSION='0.7.0'
 MANAGER=r'C:\Program Files\PitWall\manager\PitWall.ps1'
 POWERSHELL=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 

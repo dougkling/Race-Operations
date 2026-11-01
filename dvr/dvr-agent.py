@@ -1,14 +1,15 @@
 """Outbound-only, monitoring-only RaceDVR agent compatible with cloud v0.3.0."""
 import argparse,json,time,urllib.request,urllib.error
 from pathlib import Path
+from pilot_monitor import monitor_sample as pilot_probe
 from health_monitor import monitor_sample as health_probe
 from disk_monitor import sample as disk_sample
 from obs_monitor import monitor_sample as obs_probe
 from uploader_monitor import monitor_sample as uploader_probe
 from urllib.parse import urlsplit
-VERSION='0.6.0'
+VERSION='0.7.0'
 CHECKS=[('judge-cues','http://127.0.0.1:8766/health',True),('review-status','http://127.0.0.1:8765/health',False),('iis','http://127.0.0.1/index.asp',False)]
-PENDING=['connector','pilot-review','scoring']
+PENDING=['connector','scoring']
 class NoRedirect(urllib.request.HTTPRedirectHandler):
  def redirect_request(self,*args):return None
 
@@ -34,7 +35,7 @@ def collect(open_url=None):
    row['latencyMs']=round((time.monotonic()-start)*1000)
   except (OSError,ValueError):pass
   rows.append(row)
- return {'hostId':'dvr','agentVersion':'0.3.0','components':rows+[obs_probe(),uploader_probe(),disk_sample('disk-network',recordings=True),health_probe()]+[{'id':i,'status':'unknown'} for i in PENDING]}
+ return {'hostId':'dvr','agentVersion':'0.3.0','components':rows+[obs_probe(),uploader_probe(),disk_sample('disk-network',recordings=True),health_probe(),pilot_probe()]+[{'id':i,'status':'unknown'} for i in PENDING]}
 
 def send(config,payload):
  req=urllib.request.Request(config['serverUrl'].rstrip('/')+'/api/heartbeat',data=json.dumps(payload).encode('utf-8'),headers={'Authorization':'Bearer '+config['token'],'Content-Type':'application/json'})
