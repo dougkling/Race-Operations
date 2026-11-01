@@ -1,5 +1,10 @@
-[CmdletBinding()]param([string]$PythonPath)
+[CmdletBinding()]param([string]$PythonPath,[Parameter(Mandatory=$true)][string]$ServerUrl,[switch]$AllowLegacyHttp)
 $ErrorActionPreference = 'Stop'
+$ServerUrl=$ServerUrl.TrimEnd('/')
+$uri=$null
+if(-not [Uri]::TryCreate($ServerUrl,[UriKind]::Absolute,[ref]$uri) -or -not $uri.Host -or $uri.UserInfo -or $uri.Query -or $uri.Fragment -or $uri.AbsolutePath -ne '/') { throw 'ServerUrl must be a server origin without credentials or a path.' }
+$legacyHttp=$AllowLegacyHttp -and $ServerUrl -eq 'http://98.84.103.79'
+if($uri.Scheme -ne 'https' -and -not $legacyHttp){throw 'HTTPS is required. Only the existing operator deployment permits -AllowLegacyHttp with its exact legacy address.'}
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run Administrator PowerShell on the OBS/DVR PC.' }
 if (-not (Test-Path 'C:\DVR')) { throw 'C:\DVR is missing. This installer is for the OBS/DVR PC, not the cloud host.' }
 Get-ScheduledTask -TaskName 'Race DVR Judge Cues' -ErrorAction Stop | Out-Null
@@ -18,9 +23,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Python 3.10+ is required.' }
 & $PythonPath -m py_compile "$PSScriptRoot\dvr-agent.py"
 if ($LASTEXITCODE -ne 0) { throw 'Agent syntax check failed.' }
 # Only public health fields; no enrollment token is sent in this preflight.
-$health = Invoke-RestMethod 'http://98.84.103.79/health' -TimeoutSec 10
-if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0')) { throw 'Expected compatible cloud backend was not reachable.' }
-Write-Host 'This agent uses your current HTTP cloud endpoint. The DVR bearer token travels unencrypted.'
+$health = Invoke-RestMethod ($ServerUrl+'/health') -TimeoutSec 10
+if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0','0.9.0')) { throw 'Expected compatible cloud backend was not reachable.' }
+if($legacyHttp){Write-Warning 'Legacy HTTP selected. The DVR bearer token travels unencrypted.'}
 Write-Host 'Paste the DVR agent token, NOT the dashboard administrator token. It will not be displayed.'
 $secure = Read-Host 'DVR agent token' -AsSecureString
 $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
@@ -30,7 +35,7 @@ New-Item -ItemType Directory -Path $target | Out-Null
 & icacls.exe $target /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Failed to protect installation folder. Agent not installed.' }
 Copy-Item "$PSScriptRoot\dvr-agent.py","$PSScriptRoot\obs_monitor.py","$PSScriptRoot\uploader_monitor.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\health_monitor.py","$PSScriptRoot\pilot_monitor.py","$PSScriptRoot\dvr_actions.py","$PSScriptRoot\dvr_control.py","$PSScriptRoot\obs_recovery_guard.py","$PSScriptRoot\Invoke-DVR-Recovery.ps1","$PSScriptRoot\Invoke-OBS-Recovery.ps1" $target
-$config = @{hostId='dvr';serverUrl='http://98.84.103.79';allowHttp=$true;token=$token}
+$config = @{hostId='dvr';serverUrl=$ServerUrl;allowHttp=[bool]$legacyHttp;token=$token}
 [System.IO.File]::WriteAllText("$target\config.json",($config | ConvertTo-Json),[System.Text.UTF8Encoding]::new($false))
 $token=$null; $config=$null; $secure=$null
 # Validate actual enrollment and local probes before creating a startup task.

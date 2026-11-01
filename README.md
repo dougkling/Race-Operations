@@ -1,90 +1,56 @@
 # Race Operations
 
-Windows management dashboard and outbound DVR monitoring agent for RaceBot, Commentator Desk and RaceDVR.
+Windows operations dashboard for RaceBot, Commentator Desk and the Race DVR PC: live health, clickable topology, per-monitor email muting, SES alerts and operator-confirmed recovery.
 
-## Current source
+Standalone repository: **dougkling/Race-Operations**. Public temporarily at the owner's request; the owner plans to make it private later. Extracted from `dougkling/DroneRaceTools/race-operations`, preserving authentic source revisions. See [publication/open items](docs/OPEN_ITEMS.md).
 
-| Part | Version | Purpose |
+| Component | Version | Host |
 | --- | --- | --- |
-| Cloud dashboard UI | 0.9.2 | NOC layout, live topology, monitor links, inline mute switches and distinct PC sections |
-| Cloud backend | 0.9.0 | Health reporting, guarded recovery, persistent monitor mutes and SES red alerts |
-| Cloud agent | 0.7.0 | Cloud service and disk-capacity observations |
-| OBS/DVR agent | 0.8.0 | Component monitoring, scheduled health checks and guarded recovery controls |
+| NOC dashboard and live map | 0.9.2 | Cloud PC; desktop/mobile browser |
+| Backend and SES alerts | 0.9.0 | Cloud Windows PC |
+| Cloud agent | 0.7.0 | Cloud Windows PC |
+| DVR monitoring/recovery agent | 0.8.0 | OBS / DVR PC |
+| Scoring PC | Pending | Grey placeholders only |
 
-UI, backend and agent versions are independent. DVR recovery requires the v0.8.0 agent and its advertised action capabilities.
+Versions are intentionally independent. This import adds documentation, source history, packaging and a DVR installer compatibility correction; it is not evidence of a new production deployment.
 
-## Layout
+## Documentation
 
-- `cloud/`: backend, local cloud agent, dashboard, first-install and update scripts.
-- `dvr/`: outbound-only agent, read-only OBS client, first-install and update scripts.
-- `tests/`: portable backend/action/protocol tests.
-- `docs/`: rollout history, deployment notes and verification status.
+- [Full installation](docs/INSTALLATION.md): prerequisites, cloud bootstrap, probes, network access, DVR enrollment, recovery and SES.
+- [Upgrade and rollback](docs/UPGRADE_ROLLBACK.md).
+- [Configuration and integration contracts](docs/CONFIGURATION.md).
+- [Architecture](docs/ARCHITECTURE.md) and [operations runbook](docs/OPERATIONS.md).
+- [AI handoff](docs/AI_HANDOFF.md), [verification](docs/VERIFICATION.md), [open items](docs/OPEN_ITEMS.md), [source history](docs/SOURCE_HISTORY.md) and [changelog](CHANGELOG.md).
 
-No third-party Python dependencies. Python 3.10+ is required. PowerShell deployment scripts target Windows and require Administrator execution. Linux tests cannot validate Windows Task Scheduler, ACLs or real application restarts.
+## Existing deployment: map/UI update
 
-## Existing deployments
-
-On cloud PC, in `cloud/`:
-
-```powershell
-Unblock-File .\Update-Cloud.ps1
-.\Update-Cloud.ps1
-```
-
-On OBS/DVR PC, in `dvr/`:
+On the **cloud PC**, with backend v0.9.0 already installed, open Administrator PowerShell in `cloud`:
 
 ```powershell
-Unblock-File .\Update-DVR-Agent.ps1
-.\Update-DVR-Agent.ps1
+Get-ChildItem -Recurse -File | Unblock-File
+.\Update-Dashboard.ps1
 ```
 
-These scripts use protected backups and preserve enrollment tokens, profiles, startup tasks and application settings. Cloud update requires the existing verified RaceBot, Commentator and proxy probes; it blocks pending actions. Read the update-specific documents before changing a host. Only management tasks restart during upgrades. No automatic application restart occurs during installation.
+Reload desktop with Ctrl+F5 and reload mobile. This updater replaces only the web files. Read the upgrade guide for backend/DVR changes; never use a fresh installer over an existing deployment.
 
-## First installation
+## Development
 
-Cloud `Install-Cloud.ps1 -PythonPath <full-machine-Python-path>` installs into C:\ProgramData\RaceOperations with loopback port 8799, two SYSTEM boot tasks and generated local credentials. It refuses existing deployments. Component probes and recovery features start disabled; component URLs, command boundaries and safeguards must be verified before enabling them. Existing installations should use Update-Cloud.ps1, not reinstall. Existing cloud deployments verified in this project use the PitWall bundled Python 3.13.16 executable.
-
-DVR `Install-DVR-Agent.ps1` installs into C:\ProgramData\RaceOperationsDvrAgent and requires a cloud v0.3.0-compatible endpoint, C:\DVR, the Judge Cues task and a machine-wide Python. Current source adds direct OBS monitoring and requires obs_monitor.py beside dvr-agent.py. Enrollment uses the generated DVR token from cloud config, never the administrator token. The installer supports the owner's current exact HTTP cloud endpoint; other remote origins require HTTPS. Both new-install paths require live Windows verification; documented updates are the deployed path used so far.
-
-## Networking and credentials
-
-Backend remains bound to 127.0.0.1:8799. The deployed Windows host forwards port 80 to that listener using Windows portproxy/IP Helper. This network configuration is not provisioned or modified by the update scripts. The owner manages AWS security-group restrictions. The current HTTP transport provides no confidentiality; replacing it with authenticated TLS remains pending. The known deployment address appears in DVR installer/validation code and is not a credential; generalize it before deploying elsewhere.
-
-Never commit installed config directories, bearer/admin tokens, OBS passwords, AWS credentials, state/audit databases, screenshots containing credentials or local backups. The OBS password is read locally from the protected Judge Cues configuration. Server serializes only allowlisted status fields. Generated configs belong on hosts, not in this source tree.
-
-## Tests
+Production runtime: Python 3.10+ standard library, Windows PowerShell 5.1 and Administrator rights for deployment. Node/Playwright are test-only dependencies.
 
 ```bash
-python -m unittest discover -s tests -v
-node --check cloud/web/app.js
+python tools/validate.py
+npm ci --ignore-scripts
+npx playwright install chromium
+python tools/validate.py --browser
+python tools/build_packages.py --output dist
 ```
 
-Tests use temporary synthetic credentials and a local mock OBS server. Actual machine credentials are not needed. See docs/deployment-status.md for tested live behavior and outstanding validation.
+Tests use synthetic credentials, mocks and local test servers. They do not restart production applications or send real email. Native Task Scheduler, ACLs, OBS desktop launch and live SES delivery require operator acceptance.
 
-## Repository and maintenance
+## Operational boundaries
 
-Canonical repository: https://github.com/dougkling/DroneRaceTools, under `race-operations/`. This is the management dashboard/agent project only; application source remains in its own repositories. Use feature branches and pull requests for changes, run the portable tests, retain deployment instructions and report live-host verification separately from automated tests. Never sync installed credentials/state into Git. Pushing source does not automatically update either Windows machine.
+RaceBot and Commentator share a restart group. The cloud proxy and verified DVR services have separate recovery actions. Commands require authentication, CSRF, explicit confirmation, current evidence and action-specific guards. Execution journals prevent replay. OBS recovery requires known idle recording state and a verified interactive desktop launch.
 
-No unattended production deployment is configured. Windows updates use the checked-in cloud/DVR update scripts after validation. No license has been selected for redistribution.
+The map uses the same 15 monitors as the rows below. It does not test each drawn connection. DVR Control Server is the display name for `judge-cues`; HTTP health does not test the Stream Deck `/control` WebSocket. Scoring, direct Internet/LiveTime/race-tracking/S3 bucket monitoring and AI-only reconnect are unfinished.
 
-Uploader monitoring and rollout details: [docs/uploader-monitor-v0.4.0.md](docs/uploader-monitor-v0.4.0.md).
-
-Cloud connector observation and rollout: [docs/connector-monitor-v0.4.1.md](docs/connector-monitor-v0.4.1.md).
-
-Deployment workflow: keep source current in GitHub and also provide versioned deployment ZIPs. Windows PCs do not require Git.
-
-Uploader local-time correction: [docs/uploader-time-fix-v0.4.2.md](docs/uploader-time-fix-v0.4.2.md).
-
-Disk monitoring release: [docs/disk-monitor-v0.5.0.md](docs/disk-monitor-v0.5.0.md).
-
-Health-check observation: [docs/health-monitor-v0.6.0.md](docs/health-monitor-v0.6.0.md).
-
-Pilot Review monitoring: [docs/pilot-review-v0.7.0.md](docs/pilot-review-v0.7.0.md).
-
-## DVR recovery v0.8.0
-
-See [DVR controls and rollout](docs/dvr-controls-v0.8.0.md). The DVR agent now supports fixed, operator-confirmed recovery actions; older descriptions of the agent as monitoring-only apply through v0.7.0.
-
-## Dashboard live map v0.9.2
-
-See [live map and UI-only rollout](docs/dashboard-map-v0.9.2.md). The map instruments all 15 current monitors using the same evidence as the rows below, with clickable detail links and a remembered collapse setting. Requires cloud backend v0.9.0; update the cloud web files only.
+Keep production tokens, SMTP/OBS credentials, databases, logs and backups outside Git. New remote deployments require TLS; the exact existing HTTP deployment remains an explicit compatibility exception. No redistribution license has been selected.

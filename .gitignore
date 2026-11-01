@@ -35,3 +35,7 @@ venv/
 Thumbs.db
 *.zip
 *.bundle
+
+# Development-only dependencies and generated distributions
+node_modules/
+dist/

@@ -1,5 +1,30 @@
 # Changelog
 
+## Standalone repository preparation — 2026-11-01
+
+- Preserved 14 authentic source revisions with original hashes and provenance.
+- Added complete installation, configuration, architecture, operations, upgrade/rollback, AI handoff, verification and open-item guides.
+- Added development validation, CI definition and deterministic package builder.
+- DVR first installer now accepts backend 0.9.0 and requires an explicit server origin; the exact legacy HTTP exception requires opt-in.
+- AI-only reconnect remains isolated unfinished development work. No production deployment is claimed.
+
+## Dashboard UI 0.9.2
+
+Live topology with 15 monitored nodes, exact monitor links, saved collapse, recording/disk/mute evidence and mobile PC navigation.
+
+## Dashboard UI 0.9.1
+
+Distinct NOC host sections, inline mute switches, DVR Control Server display name and separate grey Scoring PC section.
+
+## Cloud alerts 0.9.0
+
+Persistent per-monitor mute preferences and SES red-incident notifications.
+
+## Monitoring 0.4.1–0.7.0
+
+0.4.1 cloud proxy-observed connector evidence; 0.4.2 uploader local-time correction; 0.5.0 cloud/DVR capacity; 0.6.0 health-report observation; 0.7.0 public Pilot Review page/manifest/sample checks. Exact source revisions are in docs/SOURCE_HISTORY.md.
+
+
 ## Cloud/DVR 0.4.0
 
 - Read-only uploader task-state, UTC heartbeat age and recent-operation evidence.
