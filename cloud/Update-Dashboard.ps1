@@ -18,7 +18,7 @@ try{
  foreach($name in $files){
   $staged=Join-Path $target ($name+'.new')
   Copy-Item (Join-Path "$PSScriptRoot\web" $name) $staged -Force
-  [IO.File]::Replace($staged,(Join-Path $target $name),$null)
+  [IO.File]::Replace($staged,(Join-Path $target $name),(Join-Path $backup ($name+'.replaced')))
  }
  Write-Host 'Dashboard UI updated to 0.8.1. Refresh desktop and mobile browsers.'
  Write-Host 'Use Ctrl+F5 on desktop. No services or applications were restarted.'
