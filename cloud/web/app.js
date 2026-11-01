@@ -27,7 +27,7 @@ function connectorEvidence(hosts){
   'Cloud connection evidence unavailable'};
 }
 let csrf="",sending=false,actionTarget="pitwall-restart",dvrActions={};
-const names={'agent-link':'Agent connection','racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'Judge Cues','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'Disk space · C:\\DVR','pilot-review':'Pilot Review','scoring':'Scoring Client','health-monitor':'System Health Check'};const ids={cloud:['agent-link','racebot','commentator','cloud-proxy','disk-space'],dvr:['agent-link','judge-cues','review-status','iis','obs','uploader','connector','disk-network','pilot-review','scoring','health-monitor']};
+const names={'agent-link':'Agent connection','racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'DVR Control Server','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'Disk space · C:\\DVR','pilot-review':'Pilot Review','scoring':'Scoring Stream Deck Client','health-monitor':'System Health Check'};const ids={cloud:['agent-link','racebot','commentator','cloud-proxy','disk-space'],dvr:['agent-link','obs','judge-cues','scoring','review-status','iis','uploader','connector','disk-network','pilot-review','health-monitor']};
 function node(tag,text,cls){const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e}
 function serviceDetail(id,c,h){
  if(id==='agent-link')return c.status==='red'?'No recent agent heartbeat':c.status==='green'?'Receiving agent heartbeats':'Waiting for agent evidence';
@@ -41,7 +41,7 @@ function serviceDetail(id,c,h){
  return c?.latencyMs!=null?'Response: '+c.latencyMs+' ms':h.connected?'Local endpoint monitoring':'Agent evidence unavailable';
 }
 function actionControl(action,a){
- const box=node('div',null,'service-action'),b=node('button',a.label);b.type='button';b.dataset.action=action;b.disabled=!a.allowed||sending;b.onclick=()=>openConfirm(action);
+ const box=node('div',null,'service-action'),b=node('button',a.label.replace('Judge Cues','DVR Control Server'));b.type='button';b.dataset.action=action;b.disabled=!a.allowed||sending;b.onclick=()=>openConfirm(action);
  const reason=a.reason==='Target is green'?'Recovery available if health check fails.':a.reason;
  box.append(b,node('p',reason,'action-reason'));return box;
 }
@@ -65,13 +65,16 @@ function render(d){
  for(const h of d.hosts){
   const host=node('section',null,'host host-'+h.id);host.id='host-'+h.id;
   const top=node('div',null,'host-head'),title=node('div',null,'host-title');
-  title.append(node('p',h.id==='cloud'?'01 / CLOUD SERVICES':'02 / CAPTURE & JUDGING','eyebrow'),node('h2',h.name));
+  title.append(node('p',h.id==='cloud'?'01 / CLOUD SERVICES':'02 / CAPTURE & JUDGING','eyebrow'),node('h2',h.id==='cloud'?'CLOUD WINDOWS PC':'OBS / DVR PC'),node('p',h.id==='cloud'?'RaceBot · Commentator · Remote judge proxy':'Capture · Scoring control · Review · Uploads','host-description'));
   top.append(title,node('span',h.connected?'● Agent connected':'○ Disconnected','badge '+(h.connected?'green':'unknown')));host.append(top);
   const grid=node('div',null,'service-grid');
+  const sections=h.id==='cloud'?{'agent-link':'HOST TELEMETRY','racebot':'APPLICATION SERVICES','disk-space':'CAPACITY'}:{'agent-link':'HOST TELEMETRY','obs':'CAPTURE & CONTROL','review-status':'REVIEW & DELIVERY','disk-network':'CAPACITY & VALIDATION'};
   for(const id of ids[h.id]||[]){
+   if(sections[id])grid.append(node('div',sections[id],'section-label'));
    const c=id==='agent-link'?{status:h.agentStatus||(h.connected?'green':'unknown')}:id==='connector'?connectorEvidence(d.hosts):(h.connected?h.sample?.components?.find(c=>c.id===id):null);
    const status=c?.status||'unknown';counts[status]=(counts[status]||0)+1;
    const card=node('article',null,'service state-'+status),head=node('div',null,'service-top');card.dataset.component=id;
+   if(id==='obs')card.classList.add('capture-row');
    head.append(node('h3',names[id]||id),node('span',({green:'● Healthy',yellow:'● Degraded',red:'● Offline',unknown:'○ Unknown'}[status]||'○ Unknown'),'badge '+status));card.append(head);
    const body=node('div',null,'service-body');const detail=serviceDetail(id,c,h);const parts=detail.split(' | ');
    let short=parts[0];
@@ -80,16 +83,19 @@ function render(d){
    if(id==='pilot-review')short=parts[0]+(c?.raceCount!=null?' · '+c.raceCount+' races':'');
    if(id==='uploader')short=c?'Task '+c.taskState+' · '+c.operation:'Evidence unavailable';
    body.append(node('p',short,'service-summary'));
+   if((id==='disk-space'||id==='disk-network')&&Number.isFinite(c?.freePercent)){const meter=node('meter');meter.min=0;meter.max=100;meter.value=c.freePercent;meter.setAttribute('aria-label','Disk space free percent');body.append(meter)}
+   if(id==='obs'){const rec=node('span',c?.recording===true?'● RECORDING':c?.recording===false?'IDLE':'RECORDING UNKNOWN','recording-flag'+(c?.recording===true?' active':''));body.prepend(rec)}
    if(parts.length>1){
     const details=node('details');details.dataset.key=h.id+'-'+id;details.open=expanded.has(details.dataset.key);
     details.append(node('summary','Details'));const facts=node('div',null,'facts');for(const part of parts)facts.append(node('div',part,'fact'));details.append(facts);body.append(details);
    }
    card.append(body);
    const muteEntry=d.alerts?.mutes?.find(m=>m.hostId===h.id&&m.componentId===id);
-   const muted=muteEntry?.muted===true;const mute=node('button',muted?'Alerts muted':'Mute alerts','mute-toggle'+(muted?' is-muted':''));
-   mute.type='button';mute.dataset.mute=h.id+':'+id;mute.setAttribute('aria-pressed',String(muted));mute.setAttribute('aria-label',(muted?'Unmute':'Mute')+' email alerts for '+(names[id]||id)+' on '+h.name);
+   const muted=muteEntry?.muted===true;const mute=node('button',null,'mute-toggle'+(muted?' is-muted':''));
+   mute.append(node('span','Mute','toggle-label'),node('span',null,'switch-track'));
+   mute.type='button';mute.setAttribute('role','switch');mute.setAttribute('aria-checked',String(muted));mute.dataset.mute=h.id+':'+id;mute.setAttribute('aria-pressed',String(muted));mute.setAttribute('aria-label','Mute email alerts for '+(names[id]||id)+' on '+h.name);
    mute.disabled=!muteEntry||muting.has(mute.dataset.mute);mute.onclick=()=>setMute(h.id,id,!muted,mute);
-   const muteBox=node('div',null,'mute-row');muteBox.append(mute);card.append(muteBox);
+   const signals=node('div',null,'service-signals');signals.append(head.lastElementChild,mute);head.append(signals);
    if(h.id==='dvr')for(const [action,a] of Object.entries(dvrActions))if(a.target===id)card.append(actionControl(action,a));
    if(h.id==='cloud'&&id==='commentator')card.append(actionControl('pitwall-restart',{label:'Restart RaceBot + Commentator',allowed:d.restartAllowed,reason:d.restartReason}));
    if(h.id==='cloud'&&id==='cloud-proxy')card.append(actionControl('proxy-restart',{label:'Restart DVR cloud proxy',allowed:d.proxyRestartAllowed,reason:d.proxyRestartReason}));
@@ -134,4 +140,4 @@ async function signin(){const token=document.querySelector('#token');try{const r
 
 async function restartGroup(){if(sending)return;sending=true;document.querySelector('#restart').disabled=true;document.querySelector('#confirm').close();const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');const requestId=[hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');try{const r=await fetch('/api/actions/'+actionTarget,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({requestId,confirmation:dvrActions[actionTarget]?.label||(actionTarget==='proxy-restart'?'Restart DVR cloud proxy':'Restart RaceBot + Commentator')})});const d=await r.json();if(!r.ok)alert(d.error||'Restart request rejected');}catch{alert('Request outcome unknown. Check activity before retrying.')}finally{sending=false;document.querySelector('#restart').disabled=false;await update()}}
 
-function openConfirm(target){actionTarget=target;if(dvrActions[target]){const a=dvrActions[target];document.querySelector('#actiontitle').textContent=a.label+'?';document.querySelector('#actionimpact').textContent=target==='dvr-health-run'?'Runs the existing health-check task and refreshes the report.':target==='dvr-obs-restart'?'OBS may close and reopen in the logged-in desktop session. Recovery is blocked while recording or when recording state cannot be established. Verify capture after recovery.':target==='dvr-judge-cues-restart'?'Judge Cues sessions will disconnect. Recording must be idle. Verify the Lead Judge arm state after recovery.':'Only '+(names[a.target]||a.target)+' will restart. Its clients or transfers may be interrupted. Confirm no critical judging transaction is in progress.';document.querySelector('#restart').textContent='Confirm';document.querySelector('#confirm').showModal();return;}const proxy=target==='proxy-restart';document.querySelector('#actiontitle').textContent=proxy?'Restart DVR cloud proxy?':'Restart RaceBot + Commentator?';document.querySelector('#actionimpact').textContent=proxy?'Remote judge sessions will disconnect temporarily. Confirm no critical judging transaction is in progress. Only the Race DVR Judge Proxy task will restart; RaceBot and Commentator keep running. Recovery checks the proxy health endpoint, not reconnection of every judge.':'Both RaceBot and Commentator will be interrupted. The DVR proxy keeps running. Both HTTP endpoints are checked after restart.';document.querySelector('#restart').textContent=proxy?'Confirm proxy restart':'Restart both applications';document.querySelector('#confirm').showModal()}
+function openConfirm(target){actionTarget=target;if(dvrActions[target]){const a=dvrActions[target];document.querySelector('#actiontitle').textContent=a.label.replace('Judge Cues','DVR Control Server')+'?';document.querySelector('#actionimpact').textContent=target==='dvr-health-run'?'Runs the existing health-check task and refreshes the report.':target==='dvr-obs-restart'?'OBS may close and reopen in the logged-in desktop session. Recovery is blocked while recording or when recording state cannot be established. Verify capture after recovery.':target==='dvr-judge-cues-restart'?'DVR Control Server sessions will disconnect. Recording must be idle. Verify the Lead Judge arm state after recovery.':'Only '+(names[a.target]||a.target)+' will restart. Its clients or transfers may be interrupted. Confirm no critical judging transaction is in progress.';document.querySelector('#restart').textContent='Confirm';document.querySelector('#confirm').showModal();return;}const proxy=target==='proxy-restart';document.querySelector('#actiontitle').textContent=proxy?'Restart DVR cloud proxy?':'Restart RaceBot + Commentator?';document.querySelector('#actionimpact').textContent=proxy?'Remote judge sessions will disconnect temporarily. Confirm no critical judging transaction is in progress. Only the Race DVR Judge Proxy task will restart; RaceBot and Commentator keep running. Recovery checks the proxy health endpoint, not reconnection of every judge.':'Both RaceBot and Commentator will be interrupted. The DVR proxy keeps running. Both HTTP endpoints are checked after restart.';document.querySelector('#restart').textContent=proxy?'Confirm proxy restart':'Restart both applications';document.querySelector('#confirm').showModal()}
