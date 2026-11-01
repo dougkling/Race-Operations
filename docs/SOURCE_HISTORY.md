@@ -25,4 +25,4 @@ The immutable `source-revision/*` tags identify authentic recovered source snaps
 
 ## Remote import mapping
 
-The JSON record maps original commits to both local bundle commits and new GitHub import commits. Parent history and import timestamps differ, while the source file blobs are identical. Annotated source-revision tags currently exist in the handoff bundle; remote tag creation remains pending.
+The JSON record maps original commits to both local bundle commits and new GitHub import commits. Parent history and import timestamps differ, while the source file blobs are identical. Annotated source-revision tags now exist in GitHub, created by the successful source-tags workflow. The earlier handoff bundle retains its original local import tags.

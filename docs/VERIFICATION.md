@@ -31,3 +31,10 @@ See OPEN_ITEMS.md for publication, native validation and product gaps. Do not ma
 - The portable/browser GitHub job is still pending at this documentation revision; consult the PR checks for its final result.
 
 - Initial GitHub Python 3.10 validation exposed six Pilot Review failures caused by seven-digit .NET fractional timestamps. The parser now normalizes to six microsecond digits; the existing manifest/sample tests are rerun in CI. This is a compatibility fix, not a new live deployment.
+
+## Final published-code validation
+
+- [GitHub Actions run 41332357323](https://github.com/dougkling/Race-Operations/actions/runs/41332357323) passed both portable and powershell jobs on `507c81fd00f6847c2a50dc995ac945d61eea68c8`: 166 Python tests on Python 3.10, JS helpers/syntax, Chromium dashboard regression tests, package builds, and Windows PowerShell syntax parsing. This successful browser run supersedes the earlier local-environment limitation.
+- PR #1 merged the tested source to main at `b8ce1b6104789bfd99b77b349519ae540c5f2e85`.
+- Source snapshot tag creation succeeded in run 41332498951. Repository administration/branch protection could not be verified or changed with this integration (GitHub returned 403); enforcement remains an open item.
+- These checks do not certify installation or live Windows recovery. No production service was changed.
