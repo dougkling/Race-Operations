@@ -24,7 +24,7 @@ def collect(config):
         result.append(row)
     return {'hostId':config['hostId'],'components':result}
 
-VERSION='0.3.2'
+VERSION='0.4.0'
 MANAGER=r'C:\Program Files\PitWall\manager\PitWall.ps1'
 POWERSHELL=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 

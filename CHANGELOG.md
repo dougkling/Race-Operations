@@ -1,5 +1,13 @@
 # Changelog
 
+## Cloud/DVR 0.4.0
+
+- Read-only uploader task-state, UTC heartbeat age and recent-operation evidence.
+- Fifteen-minute heartbeat warning based on observed 6–10 minute cadence; no calendar-filename rollover assumption.
+- Bounded log tails and allowlisted telemetry, without raw logs or credentials.
+- Preserve persistent OBS monitor and existing cloud recovery actions.
+- Uploader restart and S3 backlog/object verification remain pending.
+
 ## DVR 0.3.3
 
 - Retain one authenticated OBS WebSocket session across status reads.

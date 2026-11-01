@@ -6,10 +6,10 @@ Windows management dashboard and outbound DVR monitoring agent for RaceBot, Comm
 
 | Part | Version | Purpose |
 | --- | --- | --- |
-| Cloud dashboard/backend/agent | 0.3.2 | Health reporting, shared RaceBot + Commentator recovery, independent DVR cloud proxy recovery |
-| OBS/DVR agent | 0.3.3 | Judge Cues, Review Status, IIS and persistent read-only OBS connection/recording monitoring |
+| Cloud dashboard/backend/agent | 0.4.0 | Health reporting, shared RaceBot + Commentator recovery, independent DVR cloud proxy recovery |
+| OBS/DVR agent | 0.4.0 | Judge Cues, Review Status, IIS, persistent OBS and uploader task/log monitoring |
 
-The DVR agent sends compatibility agentVersion 0.3.0 to the backend and records its own 0.3.3 package version in local status. Both are deliberate.
+The DVR agent sends compatibility agentVersion 0.3.0 to the backend and records its own 0.4.0 package version in local status. Both are deliberate.
 
 ## Layout
 
@@ -64,3 +64,5 @@ Tests use temporary synthetic credentials and a local mock OBS server. Actual ma
 Canonical repository: https://github.com/dougkling/DroneRaceTools, under `race-operations/`. This is the management dashboard/agent project only; application source remains in its own repositories. Use feature branches and pull requests for changes, run the portable tests, retain deployment instructions and report live-host verification separately from automated tests. Never sync installed credentials/state into Git. Pushing source does not automatically update either Windows machine.
 
 No unattended production deployment is configured. Windows updates use the checked-in cloud/DVR update scripts after validation. No license has been selected for redistribution.
+
+Uploader monitoring and rollout details: [docs/uploader-monitor-v0.4.0.md](docs/uploader-monitor-v0.4.0.md).

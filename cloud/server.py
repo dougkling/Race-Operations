@@ -3,8 +3,8 @@ import argparse,hashlib,hmac,json,secrets,sqlite3,threading,time,re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit
-VERSION='0.3.2'
-COMPATIBLE_AGENTS=('0.3.0','0.3.2')
+VERSION='0.4.0'
+COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0')
 class Store:
  def __init__(self,config,db_path):
   self.config=config;self.lock=threading.RLock();self.samples={};self.sessions={}
@@ -22,7 +22,7 @@ class Store:
   targets=('cloud-proxy',) if action=='proxy-restart' else ('racebot','commentator')
   if not self.config.get(flag):return False,'Restart is not enabled for this target'
   if time.time()-sample.get('received',0)>45:return False,'Cloud agent is disconnected'
-  if sample.get('agentVersion')!=VERSION:return False,'Cloud agent update is required'
+  if sample.get('agentVersion') not in COMPATIBLE_AGENTS:return False,'Cloud agent update is required'
   if any(states.get(k) not in ('green','yellow','red') for k in targets):return False,'Target health checks must be enabled and known'
   if not any(states.get(k) in ('yellow','red') for k in targets):return False,'Target is green'
   if self.db.execute("SELECT 1 FROM jobs WHERE state IN ('queued','dispatched','running')").fetchone():return False,'A restart is already pending; do not retry'
@@ -112,6 +112,12 @@ def make_server(config,db_path,port=None):
         if host['id']=='dvr' and c['id']=='obs':
          for key in ('obsConnected','recording','recordingPaused'):clean[key]=c.get(key) if type(c.get(key)) is bool else None
          duration=c.get('recordingSeconds');clean['recordingSeconds']=duration if type(duration) in (int,float) and 0<=duration<31536000 else None
+        if host['id']=='dvr' and c['id']=='uploader':
+         clean['taskState']=c.get('taskState') if c.get('taskState') in ('Running','Ready','Disabled','Queued','unknown') else 'unknown'
+         clean['operation']=c.get('operation') if c.get('operation') in ('idle','uploading','upload_complete','archive_verified','manifest_published','started','error','unknown') else 'unknown'
+         clean['uploaderReason']=c.get('uploaderReason') if c.get('uploaderReason') in ('healthy','clock_warning','recent_error','heartbeat_missing','heartbeat_stale','log_unavailable','task_unknown','task_not_running') else 'task_unknown'
+         for key in ('heartbeatAgeSeconds','lastEventAgeSeconds','filesScanned','heartbeatWarningSeconds'):
+          value=c.get(key);clean[key]=value if type(value) in (int,float) and 0<=value<=2147483647 else None
         components.append(clean)
       state.samples[host['id']]={'received':time.time(),'components':components,'agentVersion':b.get('agentVersion') if b.get('agentVersion') in COMPATIBLE_AGENTS else 'older'}
       commands=[]

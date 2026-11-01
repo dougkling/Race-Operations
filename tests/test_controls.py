@@ -52,6 +52,11 @@ class Controls(unittest.TestCase):
  def test_crash_journal_never_replays(self):
   p=Path(self.tmp.name)/'agent.sqlite3';e=Executor({},p);e.db.execute('INSERT INTO executions VALUES (?,?,?)',('x'*36,'running','executing'));e.db.commit();e.db.close();e=Executor({},p)
   self.assertEqual(e.reports()[0][1],'indeterminate');e.accept({'id':'x'*36,'action':'pitwall-restart'});self.assertFalse(e.busy);e.db.close()
+ def test_uploader_telemetry_projects_safe_fields(self):
+  self.cfg['hosts'][1]['components']=[{'id':'uploader'}]
+  payload={'hostId':'dvr','agentVersion':'0.3.0','components':[{'id':'uploader','status':'green','taskState':'Running','heartbeatAgeSeconds':304,'lastEventAgeSeconds':304,'filesScanned':0,'operation':'idle','heartbeatWarningSeconds':900,'uploaderReason':'healthy','token':'PRIVATE','rawLog':'PRIVATE'}]}
+  code,_,_=self.req('/api/heartbeat',payload,{'Authorization':'Bearer dvr-token'})
+  self.assertEqual(code,200);sample=self.s.state.samples['dvr']['components'][0];self.assertEqual(sample['filesScanned'],0);self.assertEqual(sample['heartbeatAgeSeconds'],304);self.assertNotIn('PRIVATE',json.dumps(sample))
 if __name__=='__main__':unittest.main()
 
 class ProxyControls(Controls):

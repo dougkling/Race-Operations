@@ -17,11 +17,15 @@
 
 DVR 0.3.2 deliberately closed its OBS session after every poll, causing repeated connect/disconnect notifications. DVR 0.3.3 replaces that with a persistent authenticated connection and dedicated poll worker with reconnect backoff. Automated persistence tests passed. Operator has not yet supplied the v0.3.3 installation and stability result. Do not describe this fix as verified on the live host yet.
 
+## Uploader monitoring source 0.4.0
+
+Operator observed task Running and UTC heartbeats approximately 6–10 minutes apart in uploader-2026-10-27.log, still actively written October 29. Source now reads exact task state, picks the most recently modified uploader log and applies a 900-second warning threshold. Automated checks passed; live 0.4.0 deployment is pending. No uploader control action exists.
+
 ## Pending
 
 - Verify stable OBS connection and Idle/Recording/Unknown behavior after v0.3.3 update.
 - Verify DVR agent startup after reboot without interfering with recording operations.
-- Add uploader task/heartbeat/log/backlog/manifest checks and guarded recovery.
+- Deploy and verify uploader task/heartbeat/recent-operation checks; then add backlog/object/manifest-lag verification and guarded recovery.
 - Add Cloud Connector, disk/network, Pilot Review, scoring and health-monitor checks.
 - Reconcile OBS state with authoritative Judge Cues recording ownership before enabling Judge Cues restart.
 - Add safe DVR component actions, per-operator identities/roles and audit retention.
