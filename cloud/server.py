@@ -3,9 +3,10 @@ import argparse,hashlib,hmac,json,secrets,sqlite3,threading,time,re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit
-VERSION='0.9.0'
-COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0','0.9.0')
+VERSION='0.10.0'
+COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0','0.9.0','0.10.0')
 from email_alerts import AlertEngine
+from racebot_ai import ACTION as AI_ACTION, LABEL as AI_LABEL, STATES as AI_STATES, RESULTS as AI_RESULTS
 from dvr_actions import ACTIONS as DVR_ACTIONS, guard as dvr_guard
 
 def action_host(action):return 'dvr' if action in DVR_ACTIONS else 'cloud'
@@ -24,6 +25,7 @@ class Store:
   return [dict(zip(['id','actor','created','state','pre','result','action'],r)) for r in self.db.execute('SELECT * FROM jobs ORDER BY created DESC LIMIT 15')]
  def eligible(self,action='pitwall-restart'):
   if action in DVR_ACTIONS:return self.dvr_eligible(action)
+  if action==AI_ACTION:return self.ai_eligible()
   sample=self.samples.get('cloud',{});states={c['id']:c['status'] for c in sample.get('components',[])}
   flag='proxyRestartEnabled' if action=='proxy-restart' else 'pitwallRestartEnabled'
   targets=('cloud-proxy',) if action=='proxy-restart' else ('racebot','commentator')
@@ -36,6 +38,20 @@ class Store:
   row=self.db.execute('SELECT MAX(created) FROM jobs WHERE action=?',(action,)).fetchone()
   if row[0] and time.time()-row[0]<120:return False,'Restart cooldown: 120 seconds'
   return True,('Remote judges will disconnect temporarily; verify no critical judging transaction is in progress' if action=='proxy-restart' else 'Both RaceBot and Commentator will be interrupted')
+
+ def ai_eligible(self):
+  if self.config.get('racebotAiRestartEnabled') is not True:return False,'AI reconnect is not enabled'
+  sample=self.samples.get('cloud',{})
+  if time.time()-sample.get('received',0)>45:return False,'Cloud agent is disconnected'
+  if sample.get('agentVersion')!='0.10.0':return False,'Cloud agent v0.10.0 required'
+  bot=next((c for c in sample.get('components',[]) if c['id']=='racebot'),{})
+  if bot.get('status')!='green':return False,'RaceBot must be reachable for AI reconnect'
+  if bot.get('aiRecoverySupported') is not True:return False,'Install the RaceBot AI recovery update'
+  if bot.get('aiState')=='running':return False,'AI reconnect is already running'
+  if self.db.execute("SELECT 1 FROM jobs WHERE state IN ('queued','dispatched','running')").fetchone():return False,'An action is already pending; do not retry'
+  last=self.db.execute('SELECT MAX(created) FROM jobs WHERE action=?',(AI_ACTION,)).fetchone()[0]
+  if last and time.time()-last<120:return False,'Action cooldown: 120 seconds'
+  return True,'Reload saved AI credentials and run one small API access test'
 
  def connector_link(self):
   cloud=self.samples.get('cloud',{})
@@ -78,7 +94,7 @@ def make_server(config,db_path,port=None):
    return next((h for h in config['hosts'] if hmac.compare_digest(a,'Bearer '+h['token'])),None)
   def do_GET(self):
    path=urlsplit(self.path).path
-   if path=='/health':return self.send(200,{'ok':True,'version':VERSION,'controlsEnabled':bool(config.get('pitwallRestartEnabled') or config.get('proxyRestartEnabled') or config.get('dvrControlsEnabled'))})
+   if path=='/health':return self.send(200,{'ok':True,'version':VERSION,'controlsEnabled':bool(config.get('pitwallRestartEnabled') or config.get('proxyRestartEnabled') or config.get('dvrControlsEnabled') or config.get('racebotAiRestartEnabled'))})
    if path in ('/','/app.js'):
     f='index.html' if path=='/' else 'app.js'
     return self.send(200,(Path(__file__).parent/'web'/f).read_text(encoding='utf-8'),'text/html; charset=utf-8' if path=='/' else 'text/javascript; charset=utf-8')
@@ -89,7 +105,8 @@ def make_server(config,db_path,port=None):
      hosts=[{'id':h['id'],'name':h['name'],'connected':time.time()-state.samples.get(h['id'],{}).get('received',0)<45,'sample':state.samples.get(h['id']),'agentStatus':state.alerts.agent_status(h['id'])} for h in config['hosts']]
      allowed,reason=state.eligible()
      proxy_allowed,proxy_reason=state.eligible('proxy-restart')
-     return self.send(200,{'hosts':hosts,'csrf':s['csrf'],'restartAllowed':allowed,'restartReason':reason,'proxyRestartAllowed':proxy_allowed,'proxyRestartReason':proxy_reason,'dvrActions':{a:{'allowed':state.eligible(a)[0],'reason':state.eligible(a)[1],'label':v[1],'target':v[0]} for a,v in DVR_ACTIONS.items()},'jobs':state.jobs(),'version':VERSION,'alerts':state.alerts.summary()})
+     ai_allowed,ai_reason=state.eligible(AI_ACTION)
+     return self.send(200,{'hosts':hosts,'csrf':s['csrf'],'restartAllowed':allowed,'restartReason':reason,'proxyRestartAllowed':proxy_allowed,'proxyRestartReason':proxy_reason,'dvrActions':{a:{'allowed':state.eligible(a)[0],'reason':state.eligible(a)[1],'label':v[1],'target':v[0]} for a,v in DVR_ACTIONS.items()},'aiAction':{'allowed':ai_allowed,'reason':ai_reason,'label':AI_LABEL,'target':'racebot'},'jobs':state.jobs(),'version':VERSION,'alerts':state.alerts.summary()})
    return self.send(404,{'error':'Not found'})
   def do_POST(self):
    try:
@@ -107,9 +124,9 @@ def make_server(config,db_path,port=None):
       if not isinstance(b.get('hostId'),str) or not isinstance(b.get('componentId'),str) or type(b.get('muted')) is not bool:return self.send(400,{'error':'Invalid monitor preference'})
       state.alerts.set_mute(b['hostId'],b['componentId'],b['muted'],s['actor'])
       return self.send(200,{'ok':True})
-     if self.path in ('/api/actions/pitwall-restart','/api/actions/proxy-restart') or self.path in ['/api/actions/'+a for a in DVR_ACTIONS]:
+     if self.path in ('/api/actions/pitwall-restart','/api/actions/proxy-restart','/api/actions/'+AI_ACTION) or self.path in ['/api/actions/'+a for a in DVR_ACTIONS]:
       action=self.path.rsplit('/',1)[1]
-      confirmation=DVR_ACTIONS[action][1] if action in DVR_ACTIONS else 'Restart DVR cloud proxy' if action=='proxy-restart' else 'Restart RaceBot + Commentator'
+      confirmation=AI_LABEL if action==AI_ACTION else DVR_ACTIONS[action][1] if action in DVR_ACTIONS else 'Restart DVR cloud proxy' if action=='proxy-restart' else 'Restart RaceBot + Commentator'
       s=self.session()
       if not s:return self.send(401,{'error':'Sign in required'})
       if not hmac.compare_digest(self.headers.get('X-CSRF-Token',''),s['csrf']):return self.send(403,{'error':'Invalid CSRF token'})
@@ -134,7 +151,7 @@ def make_server(config,db_path,port=None):
        if host['id']!=action_host(row[1]):return self.send(403,{'error':'Wrong host'})
        if row[0] in ('dispatched','running'):
         outcome=b.get('state');result=b.get('result')
-        if outcome not in ('running','succeeded','failed','skipped','indeterminate') or result not in ('executing','both_http_checks_passed','manager_failed','recovery_timeout','already_healthy','unsafe_preflight','execution_uncertain','agent_controls_disabled','proxy_health_passed','task_restart_failed','component_recovered','health_check_completed','health_check_failed','preflight_blocked','local_action_failed'):return self.send(400,{'error':'Invalid action result'})
+        if outcome not in ('running','succeeded','failed','skipped','indeterminate') or result not in ('executing','both_http_checks_passed','manager_failed','recovery_timeout','already_healthy','unsafe_preflight','execution_uncertain','agent_controls_disabled','proxy_health_passed','task_restart_failed','component_recovered','health_check_completed','health_check_failed','preflight_blocked','local_action_failed','ai_request_rejected')+AI_RESULTS:return self.send(400,{'error':'Invalid action result'})
         state.audit(b['id'],outcome,result)
        return self.send(200,{'ok':True})
       allowed={c['id'] for c in host['components']};components=[]
@@ -149,6 +166,11 @@ def make_server(config,db_path,port=None):
           percent=100*free/total
           clean['status']='red' if free<2*1024**3 or percent<5 else 'yellow' if free<10*1024**3 or percent<15 else 'green'
          else:clean['status']='unknown'
+        if host['id']=='cloud' and c['id']=='racebot':
+         clean['aiRecoverySupported']=c.get('aiRecoverySupported') is True
+         clean['aiConfigured']=c.get('aiConfigured') is True
+         clean['aiState']=c.get('aiState') if c.get('aiState') in AI_STATES else 'unavailable'
+         checked=c.get('aiCheckedEpoch');clean['aiCheckedEpoch']=checked if type(checked) is int and 0<=checked<=4294967295 else None
         if host['id']=='cloud' and c['id']=='cloud-proxy':
          clean['dvrConnected']=c.get('dvrConnected') if type(c.get('dvrConnected')) is bool else None
          count=c.get('remoteJudges');clean['remoteJudges']=count if type(count) is int and 0<=count<=100000 else None
@@ -186,6 +208,7 @@ def make_server(config,db_path,port=None):
        for row in rows:
         if action_host(row[2])!=host['id']:continue
         if host['id']=='dvr' and b.get('agentVersion')!='0.8.0':continue
+        if row[2]==AI_ACTION and b.get('agentVersion')!='0.10.0':continue
         if time.time()-row[1]>60:state.audit(row[0],'skipped','queue_expired')
         else:
          state.audit(row[0],'dispatched','awaiting_agent');commands=[{'id':row[0],'action':row[2]}]

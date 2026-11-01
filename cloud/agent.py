@@ -2,6 +2,7 @@
 import argparse,json,time,urllib.request,urllib.error,sqlite3,subprocess,os,threading
 from pathlib import Path
 from disk_monitor import sample as disk_sample
+from racebot_ai import evidence as ai_evidence, perform_restart as perform_ai_restart
 from urllib.parse import urlparse
 
 def collect(config):
@@ -30,11 +31,13 @@ def collect(config):
                         count=health.get('remoteJudges');row['remoteJudges']=count if type(count) is int and 0<=count<=100000 else None
                 row['latencyMs']=round((time.monotonic()-start)*1000)
             except (OSError,ValueError): row['status']='red'
+        if c['id']=='racebot' and row['status']=='green' and c.get('url','').rstrip('/')=='http://127.0.0.1:8765':
+            row.update(ai_evidence())
         result.append(row)
     result.append(disk_sample('disk-space'))
     return {'hostId':config['hostId'],'components':result}
 
-VERSION='0.7.0'
+VERSION='0.10.0'
 MANAGER=r'C:\Program Files\PitWall\manager\PitWall.ps1'
 POWERSHELL=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 
@@ -86,7 +89,7 @@ class Executor:
   # A previous execution may have reached the manager. Never replay after a crash.
   self.db.execute("UPDATE executions SET state='indeterminate',result='execution_uncertain' WHERE state='running'");self.db.commit()
  def accept(self,command):
-  if command.get('action') not in ('pitwall-restart','proxy-restart'):return
+  if command.get('action') not in ('pitwall-restart','proxy-restart','racebot-ai-restart'):return
   jid=command.get('id')
   if not isinstance(jid,str) or len(jid)!=36:return
   with self.lock:
@@ -94,7 +97,7 @@ class Executor:
    self.db.execute('INSERT INTO executions VALUES (?,?,?)',(jid,'running','executing'));self.db.commit();self.busy=True
   threading.Thread(target=self.execute,args=(jid,command['action']),daemon=True).start()
  def execute(self,jid,action):
-  try:status,result=(perform_proxy_restart if action=='proxy-restart' else perform_restart)(self.config)
+  try:status,result=perform_ai_restart(self.config,jid) if action=='racebot-ai-restart' else (perform_proxy_restart if action=='proxy-restart' else perform_restart)(self.config)
   except Exception:status,result='indeterminate','execution_uncertain'
   with self.lock:
    self.db.execute('UPDATE executions SET state=?,result=? WHERE id=?',(status,result,jid));self.db.commit();self.busy=False
