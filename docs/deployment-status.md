@@ -40,3 +40,7 @@ RaceBot + Commentator use C:\Program Files\PitWall\manager\PitWall.ps1 -Command 
 ## Connector source 0.4.1
 
 Operator verified proxy 1.0.2 reports dvrConnected=true and remoteJudges=0. Cloud deployment was last observed at 0.3.2. Cloud-only 0.4.1 source adds proxy-observed connector state using the existing health poll; no heartbeat-age claim or connector restart action. Windows rollout pending.
+
+## Live rollout and uploader time correction
+
+Operator installed cloud 0.4.1 and DVR 0.4.0 successfully; heartbeat accepted. Screenshot confirms connector Healthy with zero judges, OBS connected/idle, and other enabled HTTP checks Healthy. Uploader showed 243 minutes despite a recent local log write. Local/UTC comparison confirms local wall time mislabeled Z. DVR 0.4.2 source corrects parsing; live fix verification pending.

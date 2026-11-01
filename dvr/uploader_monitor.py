@@ -17,12 +17,18 @@ def task_state(runner=subprocess.run):
   return value if result.returncode==0 and value in ('Running','Ready','Disabled','Queued') else 'unknown'
  except Exception:return 'unknown'
 
-def parse_log(text,now):
+def parse_log(text,now,timestamp_basis='utc'):
+ if timestamp_basis not in ('utc','local'):raise ValueError('Unsupported timestamp basis')
  heartbeat=None;last=None;scanned=None;operation='unknown';error=False;future=False
  for line in text.splitlines():
   match=STAMP.match(line)
   if not match:continue
-  try:stamp=datetime.strptime(match[1],'%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc).timestamp()
+  try:
+   wall=datetime.strptime(match[1],'%Y-%m-%d %H:%M:%S')
+   # Verified uploader writes machine-local wall time with a literal Z suffix.
+   # Use the OS date-specific timezone rules, not today's offset or a fixed four hours.
+   # During the repeated fall-back hour, prefer the older possible time.
+   stamp=min(wall.replace(fold=0).timestamp(),wall.replace(fold=1).timestamp()) if timestamp_basis=='local' else wall.replace(tzinfo=timezone.utc).timestamp()
   except ValueError:continue
   if stamp>now+60:future=True;continue
   hb=HEARTBEAT.search(line)
@@ -33,7 +39,7 @@ def parse_log(text,now):
     last=stamp;operation=kind;error=kind=='error';break
  return {'heartbeatAgeSeconds':max(0,round(now-heartbeat)) if heartbeat is not None else None,'lastEventAgeSeconds':max(0,round(now-last)) if last is not None else None,'filesScanned':scanned,'operation':operation,'clockWarning':future,'recentError':error}
 
-def probe(logs=LOGS,now=None,get_task=task_state,warning=900):
+def probe(logs=LOGS,now=None,get_task=task_state,warning=900,timestamp_basis='local'):
  now=time.time() if now is None else now
  row={'id':'uploader','status':'unknown','taskState':get_task(),'heartbeatAgeSeconds':None,'lastEventAgeSeconds':None,'filesScanned':None,'operation':'unknown','heartbeatWarningSeconds':warning,'uploaderReason':'task_unknown'}
  try:
@@ -43,7 +49,7 @@ def probe(logs=LOGS,now=None,get_task=task_state,warning=900):
   with latest.open('rb') as f:
    f.seek(0,2);size=f.tell();offset=max(0,size-131072);f.seek(offset);raw=f.read(131072)
   if offset and b'\n' in raw:raw=raw.split(b'\n',1)[1]
-  info=parse_log(raw.decode('utf-8-sig',errors='replace'),now)
+  info=parse_log(raw.decode('utf-8-sig',errors='replace'),now,timestamp_basis)
   row.update({k:info[k] for k in ('heartbeatAgeSeconds','lastEventAgeSeconds','filesScanned','operation')})
   reason='clock_warning' if info['clockWarning'] else 'recent_error' if info['recentError'] else 'heartbeat_missing' if info['heartbeatAgeSeconds'] is None else 'heartbeat_stale' if info['heartbeatAgeSeconds']>warning else 'healthy'
  except OSError:reason='log_unavailable'

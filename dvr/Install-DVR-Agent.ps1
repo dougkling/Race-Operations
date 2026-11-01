@@ -19,7 +19,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Python 3.10+ is required.' }
 if ($LASTEXITCODE -ne 0) { throw 'Agent syntax check failed.' }
 # Only public health fields; no enrollment token is sent in this preflight.
 $health = Invoke-RestMethod 'http://98.84.103.79/health' -TimeoutSec 10
-if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0')) { throw 'Expected compatible cloud backend was not reachable.' }
+if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1')) { throw 'Expected compatible cloud backend was not reachable.' }
 Write-Host 'This agent uses your current HTTP cloud endpoint. The DVR bearer token travels unencrypted.'
 Write-Host 'Paste the DVR agent token, NOT the dashboard administrator token. It will not be displayed.'
 $secure = Read-Host 'DVR agent token' -AsSecureString

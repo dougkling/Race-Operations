@@ -4,7 +4,7 @@ from pathlib import Path
 from obs_monitor import monitor_sample as obs_probe
 from uploader_monitor import monitor_sample as uploader_probe
 from urllib.parse import urlsplit
-VERSION='0.4.0'
+VERSION='0.4.2'
 CHECKS=[('judge-cues','http://127.0.0.1:8766/health',True),('review-status','http://127.0.0.1:8765/health',False),('iis','http://127.0.0.1/index.asp',False)]
 PENDING=['connector','disk-network','pilot-review','scoring','health-monitor']
 class NoRedirect(urllib.request.HTTPRedirectHandler):

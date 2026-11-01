@@ -10,7 +10,7 @@ foreach ($file in @('dvr-agent.py','obs_monitor.py','uploader_monitor.py')) {
  & $python -m py_compile (Join-Path $PSScriptRoot $file)
  if ($LASTEXITCODE -ne 0) { throw "Validation failed: $file" }
 }
-$backup=Join-Path $target ('backups\before-v0.4.0-'+(Get-Date -Format yyyyMMdd-HHmmss))
+$backup=Join-Path $target ('backups\before-v0.4.2-'+(Get-Date -Format yyyyMMdd-HHmmss))
 New-Item -ItemType Directory -Path $backup -Force | Out-Null
 Copy-Item "$target\dvr-agent.py" $backup
 if(Test-Path "$target\obs_monitor.py"){Copy-Item "$target\obs_monitor.py" $backup}
@@ -27,7 +27,7 @@ try {
  if($LASTEXITCODE -ne 0){throw 'Test heartbeat failed.'}
  Enable-ScheduledTask -TaskName $name | Out-Null
  Start-ScheduledTask -TaskName $name
- Write-Host 'DVR agent updated to 0.4.0. OBS and uploader task/heartbeat monitoring enabled.'
+ Write-Host 'DVR agent updated to 0.4.2. OBS and uploader task/heartbeat monitoring enabled.'
  Write-Host 'No OBS or RaceDVR applications were changed or restarted. No recording commands were sent.'
  Write-Host "Backup: $backup"
 } catch {
