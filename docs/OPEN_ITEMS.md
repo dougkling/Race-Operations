@@ -3,11 +3,11 @@
 ## Repository publication
 
 - The owner created `dougkling/Race-Operations` and authorized temporary public publication on 2026-11-01. The owner plans to change visibility later.
-- All 14 authentic source snapshots are imported on `feature/standalone-import`; source, documentation and CI are being published through a PR. Check the PR/Actions state for final merge and check results.
-- The local Git handoff preserves 14 annotated `source-revision/*` tags. The source-tags workflow creates the corresponding remote tags after merge, refuses to overwrite existing tags, and must be checked for success. Repository protection still requires administration access.
+- Source, full documentation and CI are published on main through [PR #1](https://github.com/dougkling/Race-Operations/pull/1), merged at `b8ce1b6104789bfd99b77b349519ae540c5f2e85`. All 14 authentic source snapshots are preserved.
+- The source-tags workflow successfully created the 14 annotated remote source-revision tags (run 41332498951). It refuses to overwrite existing tags. Repository-level tag/branch protection still requires administration access.
 - Enable `main` protection, require PRs and passing `portable`/`powershell` checks, prohibit force push/deletion; verify enforcement. Protect accepted release/source tags against changes. Policy documents alone do not enforce these settings.
 - Do not relabel source recovery as historical release certification. Full Windows deployment acceptance remains separate from CI.
-- Update the old DroneRaceTools landing page after the standalone PR is merged. Preserve its original history.
+- The old DroneRaceTools landing page now links here through merged PR #14; its original source and history remain intact.
 
 ## Product work
 
@@ -22,7 +22,7 @@
 
 ## Acceptance evidence still required
 
-- Fresh Windows install and native PowerShell parser/execution; the new DVR installer origin/compatibility change is source-validated but not installed on a live host here.
+- Fresh Windows install and native PowerShell execution (Windows syntax parsing passed CI); the new DVR installer origin/compatibility change is source-validated but not installed on a live host here.
 - Exact deployed-folder hashes matched to the source commit; no current Windows host snapshot was available for this import.
 - Reboot without RDP and OBS interactive-user recovery; full Windows rollback exercise.
 - Live SES inbox delivery and complete outage/mute/recovery acceptance after the final source/package is installed.
