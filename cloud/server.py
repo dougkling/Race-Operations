@@ -3,8 +3,8 @@ import argparse,hashlib,hmac,json,secrets,sqlite3,threading,time,re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from urllib.parse import urlsplit
-VERSION='0.4.0'
-COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0')
+VERSION='0.4.1'
+COMPATIBLE_AGENTS=('0.3.0','0.3.2','0.4.0','0.4.1')
 class Store:
  def __init__(self,config,db_path):
   self.config=config;self.lock=threading.RLock();self.samples={};self.sessions={}
@@ -109,6 +109,9 @@ def make_server(config,db_path,port=None):
       for c in b.get('components',[]):
        if isinstance(c,dict) and c.get('id') in allowed:
         clean={'id':c['id'],'status':c.get('status') if c.get('status') in ('green','yellow','red','unknown') else 'unknown','latencyMs':c.get('latencyMs') if isinstance(c.get('latencyMs'),(float,int)) else None}
+        if host['id']=='cloud' and c['id']=='cloud-proxy':
+         clean['dvrConnected']=c.get('dvrConnected') if type(c.get('dvrConnected')) is bool else None
+         count=c.get('remoteJudges');clean['remoteJudges']=count if type(count) is int and 0<=count<=100000 else None
         if host['id']=='dvr' and c['id']=='obs':
          for key in ('obsConnected','recording','recordingPaused'):clean[key]=c.get(key) if type(c.get(key)) is bool else None
          duration=c.get('recordingSeconds');clean['recordingSeconds']=duration if type(duration) in (int,float) and 0<=duration<31536000 else None

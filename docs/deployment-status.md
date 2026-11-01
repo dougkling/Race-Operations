@@ -36,3 +36,7 @@ Operator observed task Running and UTC heartbeats approximately 6–10 minutes a
 ## Fixed restart targets
 
 RaceBot + Commentator use C:\Program Files\PitWall\manager\PitWall.ps1 -Command restart, grouped by operator approval. Cloud proxy uses only its exact scheduled task. No host reboot action or generic shell endpoint exists. DVR agent currently supports no actions; no OBS/recording control requests exist in its monitoring client.
+
+## Connector source 0.4.1
+
+Operator verified proxy 1.0.2 reports dvrConnected=true and remoteJudges=0. Cloud deployment was last observed at 0.3.2. Cloud-only 0.4.1 source adds proxy-observed connector state using the existing health poll; no heartbeat-age claim or connector restart action. Windows rollout pending.

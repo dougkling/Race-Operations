@@ -18,13 +18,20 @@ def collect(config):
                 opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect())
                 with opener.open(c['url'],timeout=3) as r:
                     body=r.read(65536); row['status']='green' if r.status==200 else 'red'
-                    if c.get('requireOk') and row['status']=='green': row['status']='green' if json.loads(body).get('ok') is True else 'yellow'
+                    if c.get('requireOk') and row['status']=='green':
+                        health=json.loads(body)
+                        row['status']='green' if isinstance(health,dict) and health.get('ok') is True else 'yellow'
+                if c['id']=='cloud-proxy' and c['url']=='http://127.0.0.1:8767/health' and row['status']=='green':
+                    health=json.loads(body)
+                    if isinstance(health,dict) and health.get('ok') is True:
+                        row['dvrConnected']=health.get('dvrConnected') if type(health.get('dvrConnected')) is bool else None
+                        count=health.get('remoteJudges');row['remoteJudges']=count if type(count) is int and 0<=count<=100000 else None
                 row['latencyMs']=round((time.monotonic()-start)*1000)
             except (OSError,ValueError): row['status']='red'
         result.append(row)
     return {'hostId':config['hostId'],'components':result}
 
-VERSION='0.4.0'
+VERSION='0.4.1'
 MANAGER=r'C:\Program Files\PitWall\manager\PitWall.ps1'
 POWERSHELL=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 
