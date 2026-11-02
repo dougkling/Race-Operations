@@ -77,3 +77,8 @@ DVR recovery: Judge Cues, Review Status, IIS, uploader, discovered connector, an
 ## Dashboard UI 0.8.1
 
 Commentator Desk charcoal/gold styling, responsive service cards, adjacent recovery controls, collapsible diagnostics, status overview and readable activity cards. Cloud web files only; backend and DVR agent remain 0.8.0.
+
+
+## 0.10.0 — 2026-11-02
+
+Added independent RaceBot AI monitoring, real request failures, five-minute active probes, failure-only AI reconnect, AI-aware shared restart, existing SES alert integration, a clickable AI map/row, and a transactional cross-project updater with rollback. API credentials remain inside RaceBot. Automated tests do not establish native Windows/live provider/SES acceptance.

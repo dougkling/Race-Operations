@@ -4,7 +4,7 @@ from datetime import datetime,timezone
 from email.message import EmailMessage
 from email.utils import format_datetime
 from pathlib import Path
-NAMES={'agent-link':'Agent connection','racebot':'RaceBot','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'Judge Cues','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'DVR disk space','pilot-review':'Pilot Review','scoring':'Scoring Client','health-monitor':'System Health Check'}
+NAMES={'agent-link':'Agent connection','racebot':'RaceBot','racebot-ai':'RaceBot AI','commentator':'Commentator Desk','cloud-proxy':'DVR cloud proxy','judge-cues':'Judge Cues','review-status':'Review Status','iis':'IIS Judge Review','obs':'OBS Studio','uploader':'S3 Uploader','connector':'Cloud Connector','disk-space':'System disk C:','disk-network':'DVR disk space','pilot-review':'Pilot Review','scoring':'Scoring Client','health-monitor':'System Health Check'}
 
 def load_config(path):
  try:

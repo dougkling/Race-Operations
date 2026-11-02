@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 $target='C:\ProgramData\RaceOperations\web'
 if(-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){throw 'Run Administrator PowerShell on the cloud PC.'}
 $health=Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 5
-if(-not $health.ok -or $health.version -ne '0.9.0'){throw 'This dashboard update requires the v0.9.0 backend. Install the cloud v0.9.0 update first.'}
+if(-not $health.ok -or $health.version -notin @('0.9.0','0.10.0')){throw 'This dashboard update requires the v0.9.0 backend. Install the cloud v0.9.0 update first.'}
 $files=@('index.html','app.js')
 $manifest=Get-Content (Join-Path $PSScriptRoot 'UI-MANIFEST.json') -Raw | ConvertFrom-Json
 foreach($name in $files){

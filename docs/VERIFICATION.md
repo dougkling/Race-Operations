@@ -38,3 +38,10 @@ See OPEN_ITEMS.md for publication, native validation and product gaps. Do not ma
 - PR #1 merged the tested source to main at `b8ce1b6104789bfd99b77b349519ae540c5f2e85`.
 - Source snapshot tag creation succeeded in run 41332498951. Repository administration/branch protection could not be verified or changed with this integration (GitHub returned 403); enforcement remains an open item.
 - These checks do not certify installation or live Windows recovery. No production service was changed.
+
+
+## AI health and recovery v0.10.0
+
+See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.
+
+AI update verification in this change: RaceBot 240 offline unit tests passed; the Race Operations regression suite includes AI alert and scoped recovery tests. Chromium Headless Shell 134 passed desktop/mobile dashboard tests at 1440, 768, 390 and 320 pixels, including the AI map node and failure-only reconnect confirmation. Installer planning/apply/idempotency/rollback/concurrent-edit tests passed. PowerShell native execution and live Windows acceptance remain unrun locally.

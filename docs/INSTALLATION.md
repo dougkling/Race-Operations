@@ -142,3 +142,8 @@ See [alerts-v0.9.0.md](alerts-v0.9.0.md). Mute suppresses email only; status and
 8. Record installed file hashes/source revision, private backups and operator results.
 
 Automated tests do not certify a fresh Windows installation, live recovery, firewall/TLS setup or SES delivery.
+
+
+## AI health and recovery v0.10.0
+
+See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.

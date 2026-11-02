@@ -78,3 +78,8 @@ Unknown is not healthy. Stale host component rows become unknown; connector stat
 Browser: `/api/login`, `/api/status`, `/api/monitor-mute`, and allowlisted `/api/actions/<action>`. Mutations require session and CSRF; recovery additionally requires the exact confirmation label and UUID request ID. Agent: `/api/heartbeat` and `/api/action-result`, using separate host-bound bearer tokens. Reusing a request ID does not execute twice. No generic shell/host reboot endpoint exists. Public `/health` exposes backend readiness, not application health.
 
 Display renaming must not change `judge-cues` or its confirmation payload without coordinated backend/agent changes. Cloud `/control` is not the DVR Stream Deck WebSocket; the DVR endpoint is local port 8766 `/control`. The existing HTTP health probe does not authenticate or exercise that socket.
+
+
+## AI health and recovery v0.10.0
+
+See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.

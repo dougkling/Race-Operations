@@ -2,12 +2,16 @@
 import argparse,json,time,urllib.request,urllib.error,sqlite3,subprocess,os,threading
 from pathlib import Path
 from disk_monitor import sample as disk_sample
+from ai_monitor import sample as ai_sample, reconnect as ai_reconnect
 from urllib.parse import urlparse
 
 def collect(config):
     result=[]
     for c in config['components']:
         if c['id']=='disk-space':continue
+        if c['id']=='racebot-ai':
+            result.append(ai_sample(config) if c.get('enabled') else {'id':'racebot-ai','status':'unknown'})
+            continue
         row={'id':c['id'],'status':'unknown'}
         if c.get('enabled') and c.get('probe')=='http':
             u=urlparse(c['url'])
@@ -34,7 +38,7 @@ def collect(config):
     result.append(disk_sample('disk-space'))
     return {'hostId':config['hostId'],'components':result}
 
-VERSION='0.7.0'
+VERSION='0.10.0'
 MANAGER=r'C:\Program Files\PitWall\manager\PitWall.ps1'
 POWERSHELL=r'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
 
@@ -42,7 +46,7 @@ def perform_restart(config,runner=subprocess.run,probe=collect,sleep=time.sleep,
  if config.get('hostId')!='cloud' or not config.get('pitwallRestartEnabled'):return 'skipped','agent_controls_disabled'
  current={c['id']:c['status'] for c in probe(config)['components']}
  if any(current.get(k) not in ('green','yellow','red') for k in ('racebot','commentator')):return 'skipped','unsafe_preflight'
- if all(current[k]=='green' for k in ('racebot','commentator')):return 'skipped','already_healthy'
+ if all(current[k]=='green' for k in ('racebot','commentator')) and current.get('racebot-ai')!='red':return 'skipped','already_healthy'
  if not Path(MANAGER).is_file() or os.name!='nt':return 'skipped','unsafe_preflight'
  try:
   # Existing local manager only. Process-scoped policy flag; no machine policy changes.
@@ -53,7 +57,9 @@ def perform_restart(config,runner=subprocess.run,probe=collect,sleep=time.sleep,
  deadline=clock()+90
  while clock()<deadline:
   statuses={c['id']:c['status'] for c in probe(config)['components']}
-  if all(statuses.get(k)=='green' for k in ('racebot','commentator')):return 'succeeded','both_http_checks_passed'
+  if all(statuses.get(k)=='green' for k in ('racebot','commentator')):
+   if 'racebot-ai' not in statuses:return 'succeeded','both_http_checks_passed'
+   if statuses.get('racebot-ai')=='green':return 'succeeded','ai_and_http_checks_passed'
   sleep(3)
  return 'failed','recovery_timeout'
 
@@ -86,7 +92,7 @@ class Executor:
   # A previous execution may have reached the manager. Never replay after a crash.
   self.db.execute("UPDATE executions SET state='indeterminate',result='execution_uncertain' WHERE state='running'");self.db.commit()
  def accept(self,command):
-  if command.get('action') not in ('pitwall-restart','proxy-restart'):return
+  if command.get('action') not in ('pitwall-restart','proxy-restart','racebot-ai-reconnect'):return
   jid=command.get('id')
   if not isinstance(jid,str) or len(jid)!=36:return
   with self.lock:
@@ -94,7 +100,9 @@ class Executor:
    self.db.execute('INSERT INTO executions VALUES (?,?,?)',(jid,'running','executing'));self.db.commit();self.busy=True
   threading.Thread(target=self.execute,args=(jid,command['action']),daemon=True).start()
  def execute(self,jid,action):
-  try:status,result=(perform_proxy_restart if action=='proxy-restart' else perform_restart)(self.config)
+  try:
+   if action=='racebot-ai-reconnect':status,result=ai_reconnect(self.config,jid)
+   else:status,result=(perform_proxy_restart if action=='proxy-restart' else perform_restart)(self.config)
   except Exception:status,result='indeterminate','execution_uncertain'
   with self.lock:
    self.db.execute('UPDATE executions SET state=?,result=? WHERE id=?',(status,result,jid));self.db.commit();self.busy=False

@@ -11,7 +11,7 @@ Get-ScheduledTask -TaskName 'Race DVR Judge Proxy' -TaskPath '\' -ErrorAction St
 $pt = $null; $pe = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($manager,[ref]$pt,[ref]$pe)
 if ($pe.Count -gt 0 -or $ast.ParamBlock.Extent.Text -notmatch "'restart'") { throw 'Manager restart parameter could not be verified.' }
-foreach ($f in @('server.py','agent.py','disk_monitor.py','dvr_actions.py','email_alerts.py')) {
+foreach ($f in @('server.py','agent.py','disk_monitor.py','dvr_actions.py','email_alerts.py','ai_monitor.py')) {
  & $python -m py_compile (Join-Path $PSScriptRoot $f)
  if ($LASTEXITCODE -ne 0) { throw "Python validation failed: $f" }
 }
@@ -30,14 +30,14 @@ if (Test-Path $db) {
  if ($LASTEXITCODE -ne 0) { throw 'Resolve the pending action before updating.' }
 }
 # Copy the files/config to an inherited protected backup folder; do not regenerate tokens.
-$backup = Join-Path $target ('backups\before-v0.9.0-' + (Get-Date -Format yyyyMMdd-HHmmss))
+$backup = Join-Path $target ('backups\before-v0.10.0-' + (Get-Date -Format yyyyMMdd-HHmmss))
 New-Item -ItemType Directory -Path $backup -Force | Out-Null
 Copy-Item "$target\server.py","$target\agent.py" $backup
 if(Test-Path "$target\dvr_actions.py"){Copy-Item "$target\dvr_actions.py" $backup}
 if (Test-Path "$target\disk_monitor.py") { Copy-Item "$target\disk_monitor.py" $backup }
 Copy-Item "$target\web" $backup -Recurse
 Copy-Item "$target\config\server.json","$target\config\cloud-agent.json" $backup
-foreach($name in @('email_alerts.py','Configure-SES.ps1')){if(Test-Path (Join-Path $target $name)){Copy-Item (Join-Path $target $name) (Join-Path $backup $name)}}
+foreach($name in @('email_alerts.py','ai_monitor.py','Configure-SES.ps1')){if(Test-Path (Join-Path $target $name)){Copy-Item (Join-Path $target $name) (Join-Path $backup $name)}}
 $stopped = $false
 try {
  Stop-ScheduledTask -TaskName 'Race Operations Cloud Agent'
@@ -50,7 +50,7 @@ try {
  } while ($running -gt 0 -and (Get-Date) -lt $deadline)
  if ($running -gt 0) { throw 'Management tasks did not stop. No forced process termination will be attempted.' }
  if (Test-Path $db) { Copy-Item -LiteralPath $db -Destination (Join-Path $backup 'actions.sqlite3') }
- Copy-Item "$PSScriptRoot\server.py","$PSScriptRoot\agent.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\dvr_actions.py","$PSScriptRoot\email_alerts.py","$PSScriptRoot\Configure-SES.ps1" $target -Force
+ Copy-Item "$PSScriptRoot\server.py","$PSScriptRoot\agent.py","$PSScriptRoot\disk_monitor.py","$PSScriptRoot\dvr_actions.py","$PSScriptRoot\email_alerts.py","$PSScriptRoot\ai_monitor.py","$PSScriptRoot\Configure-SES.ps1" $target -Force
  Copy-Item "$PSScriptRoot\web\index.html","$PSScriptRoot\web\app.js" "$target\web" -Force
  $serverConfig | Add-Member -NotePropertyName dvrControlsEnabled -NotePropertyValue $true -Force
  $dvrHost=@($serverConfig.hosts | Where-Object { $_.id -eq 'dvr' })[0]
@@ -70,10 +70,10 @@ try {
  $healthy = $false
  for ($i=0; $i -lt 20; $i++) {
   Start-Sleep -Seconds 1
-  try { $h = Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 2; if ($h.ok -and $h.version -eq '0.9.0') { $healthy=$true; break } } catch {}
+  try { $h = Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 2; if ($h.ok -and $h.version -eq '0.10.0') { $healthy=$true; break } } catch {}
  }
  if (-not $healthy) { throw 'Updated backend did not pass its startup check.' }
- Write-Host 'Updated to v0.9.0. Refresh dashboard with Ctrl+F5 and sign in again.'
+ Write-Host 'Updated to v0.10.0. Refresh dashboard with Ctrl+F5 and sign in again.'
  Write-Host 'Each restart control is disabled while its target is green. A failing health check enables that control.'
  Write-Host "Backup: $backup"
  Write-Host 'No RaceBot, Commentator or DVR application was restarted by this update.'
@@ -86,7 +86,7 @@ try {
   Copy-Item "$backup\server.py","$backup\agent.py" $target -Force
   if(Test-Path "$backup\dvr_actions.py"){Copy-Item "$backup\dvr_actions.py" $target -Force}
   if (Test-Path "$backup\disk_monitor.py") { Copy-Item "$backup\disk_monitor.py" $target -Force } else { Remove-Item "$target\disk_monitor.py" -ErrorAction SilentlyContinue }
-  foreach($name in @('email_alerts.py','Configure-SES.ps1')){if(Test-Path (Join-Path $backup $name)){Copy-Item (Join-Path $backup $name) (Join-Path $target $name) -Force}else{Remove-Item (Join-Path $target $name) -ErrorAction SilentlyContinue}}
+  foreach($name in @('email_alerts.py','ai_monitor.py','Configure-SES.ps1')){if(Test-Path (Join-Path $backup $name)){Copy-Item (Join-Path $backup $name) (Join-Path $target $name) -Force}else{Remove-Item (Join-Path $target $name) -ErrorAction SilentlyContinue}}
   Copy-Item "$backup\web\*" "$target\web" -Force
   Copy-Item "$backup\server.json","$backup\cloud-agent.json" "$target\config" -Force
   if (Test-Path (Join-Path $backup 'actions.sqlite3')) { Copy-Item (Join-Path $backup 'actions.sqlite3') $db -Force }

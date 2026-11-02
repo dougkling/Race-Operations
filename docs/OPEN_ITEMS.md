@@ -11,10 +11,10 @@
 
 ## Product work
 
-- Finish/test/package the RaceBot AI-only reconnect draft; not in stable main.
+- Accept the v0.10.0 AI monitor/reconnect updater on the live Windows server and verify the configured SES inbox. See ai-monitor-v0.10.0.md.
 - Implement scoring PC agent/status/controls. Placeholders remain grey.
 - Add an actual authenticated DVR `/control` WebSocket health test if requested; HTTP reachability is not that test.
-- AI/YouTube/Discord integration health, direct LiveTime/race tracking/Internet/S3 bucket monitoring remain absent.
+- YouTube/Discord and Commentator research integration health, direct LiveTime/race tracking/Internet/S3 bucket monitoring remain absent.
 - Add independent external monitoring for total cloud/backend failure.
 - Generalize deployment-specific public S3 URL, task names, paths and the fixed PitWall updater prerequisites before supporting another installation.
 - Replace the legacy HTTP management transport with verified TLS when the operator schedules it. Do not broaden the historical HTTP exception.
