@@ -17,14 +17,15 @@ def normalized(data):return data.decode('utf-8-sig').replace('\r\n','\n')
 def text_digest(data):return digest(normalized(data).encode())
 
 def patch_app(text, changes):
-    for change in changes:
+    for index,change in enumerate(changes,1):
         before,after=change['before'],change['after']
-        if text.count(before)==1:
-            text=text.replace(before,after,1)
-        elif text.count(before)==0 and text.count(after)==1:
+        old_count,new_count=text.count(before),text.count(after)
+        if new_count==1 and old_count<=1:
             continue
+        if old_count==1 and new_count==0:
+            text=text.replace(before,after,1)
         else:
-            raise ValueError('Installed RaceBot differs at an AI insertion point. No live files changed.')
+            raise ValueError('Installed RaceBot differs at AI insertion point '+str(index)+'. No live files changed.')
     ast.parse(text)
     return text
 
