@@ -38,6 +38,16 @@ class Tests(unittest.TestCase):
   cfg=json.loads((self.target/'config/server.json').read_text());self.assertEqual(cfg['hosts'][1],self.server['hosts'][1]);self.assertEqual(cfg['privateSetting'],'synthetic')
   agent=json.loads((self.target/'config/cloud-agent.json').read_text());self.assertEqual(agent['token'],'synthetic-agent')
   up.rollback(self.folder);self.assertEqual(self.app.read_bytes(),before);self.assertFalse((self.data/'ai-monitor-token').exists())
+ def test_installed_timeout_constructor_is_preserved(self):
+  source=self.app.read_text().replace('def __init__(self, key, model):','def __init__(self, key, model, timeout=60):',1)
+  source=source.replace('        self.key, self.model = key, model\n','        self.key, self.model = key, model\n        self.timeout=timeout\n',1)
+  source=source.replace('urllib.request.urlopen(req, timeout=60)','urllib.request.urlopen(req, timeout=self.timeout)',1)
+  changes=json.loads((self.payload/'app-patch.json').read_text())
+  result=up.patch_app(source,changes)
+  self.assertIn('def __init__(self, key, model, timeout=60):',result)
+  self.assertIn('        self.timeout=timeout',result)
+  self.assertIn('urllib.request.urlopen(req, timeout=self.timeout)',result)
+  self.assertEqual(up.patch_app(result,changes),result)
  def test_patch_idempotent(self):
   changes=json.loads((self.payload/'app-patch.json').read_text())
   once=up.patch_app(self.app.read_text(),changes)

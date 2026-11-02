@@ -82,3 +82,7 @@ Commentator Desk charcoal/gold styling, responsive service cards, adjacent recov
 ## 0.10.0 — 2026-11-02
 
 Added independent RaceBot AI monitoring, real request failures, five-minute active probes, failure-only AI reconnect, AI-aware shared restart, existing SES alert integration, a clickable AI map/row, and a transactional cross-project updater with rollback. API credentials remain inside RaceBot. Automated tests do not establish native Windows/live provider/SES acceptance.
+
+### v0.10.0 installer compatibility correction
+
+Preserve timeout-aware RaceBot constructors during the narrow AI update; identify failed insertion indexes and support repeated patch application. No runtime monitoring protocol changes.

@@ -54,3 +54,7 @@ python tools/build_ai_update.py --racebot ../RaceBot --output dist
 ```
 
 The generated script contains a checksum-verified embedded payload; SHA256 accompanies it. Linux automated tests exercise failure propagation, stale/unknown evidence, stage isolation, local authorization, scoped CSRF-protected recovery, deduplication, cooldown, email incidents, surgical upgrades and rollback. Browser tests cover the new row/map and failure-only button. Windows PowerShell parsing is checked in CI. Native Windows task/ACL/rollback execution, actual installed-source parity, live provider calls and SES inbox delivery require installation acceptance; they are not claimed by portable tests.
+
+### Constructor compatibility correction
+
+The first updater expected the older two-argument OpenAI constructor. The corrected patch inserts monitoring independently of the constructor signature, preserving the installed timeout argument and self.timeout. Patch replay recognizes inserted content before testing the old anchor. The correction was verified against both saved Windows master ZIP versions and against the already patched source, including repeated installation. A failed insertion preflight changed no live files and stopped no services; replace the downloaded updater and rerun without rollback.
