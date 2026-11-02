@@ -58,7 +58,8 @@ def perform_restart(config,runner=subprocess.run,probe=collect,sleep=time.sleep,
  while clock()<deadline:
   statuses={c['id']:c['status'] for c in probe(config)['components']}
   if all(statuses.get(k)=='green' for k in ('racebot','commentator')):
-   if 'racebot-ai' not in statuses:return 'succeeded','both_http_checks_passed'
+   ai_enabled=any(c.get('id')=='racebot-ai' and c.get('enabled') for c in config.get('components',[]))
+   if not ai_enabled:return 'succeeded','both_http_checks_passed'
    if statuses.get('racebot-ai')=='green':return 'succeeded','ai_and_http_checks_passed'
   sleep(3)
  return 'failed','recovery_timeout'

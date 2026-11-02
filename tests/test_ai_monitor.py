@@ -42,6 +42,15 @@ class Tests(unittest.TestCase):
     s.samples['cloud']={'received':time.time(),'agentVersion':'0.7.0','components':[{'id':'racebot-ai','status':'red'}]}
     self.assertFalse(s.eligible('racebot-ai-reconnect')[0])
    finally:s.db.close()
+ def test_restart_requires_ai_only_when_monitor_is_enabled(self):
+  for enabled in (False,True):
+   cfg={'hostId':'cloud','pitwallRestartEnabled':True,'components':[{'id':'racebot-ai','enabled':enabled}]}
+   def rows(http,ai):return {'components':[{'id':'racebot','status':http},{'id':'commentator','status':'green'},{'id':'racebot-ai','status':ai}]}
+   samples=iter([rows('red','unknown'),rows('green','unknown'),rows('green','green')])
+   with patch('agent.os.name','nt'),patch('agent.Path') as path:
+    path.return_value.is_file.return_value=True
+    result=perform_restart(cfg,runner=lambda *a,**kw:Mock(returncode=0),probe=lambda _:next(samples),sleep=lambda _:None)
+   self.assertEqual(result,('succeeded','ai_and_http_checks_passed' if enabled else 'both_http_checks_passed'))
  def test_shared_restart_does_not_skip_failed_ai(self):
   cfg={'hostId':'cloud','pitwallRestartEnabled':True}
   probe=lambda _:{'components':[{'id':'racebot','status':'green'},{'id':'commentator','status':'green'},{'id':'racebot-ai','status':'red'}]}
