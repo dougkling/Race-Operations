@@ -35,3 +35,8 @@ Do **not** casually overwrite action/alert databases from an old backup: this ca
 ## Git workflow
 
 Use a feature branch, relevant automated checks, a reviewed PR and an immutable release tag. Package the exact reviewed commit. Never force-push `main` or move old release/source-revision tags. Existing historical ZIPs and incomplete drafts are not automatically full deployable releases. GitHub publication does not deploy either Windows PC.
+
+
+## AI health and recovery v0.10.0
+
+See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.

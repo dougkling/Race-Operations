@@ -5,9 +5,9 @@ $root='C:\ProgramData\RaceOperations'
 $task=Get-ScheduledTask -TaskName 'Race Operations Backend' -TaskPath '\'
 $python=@($task.Actions)[0].Execute
 $health=Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 5
-if(-not $health.ok -or $health.version -notin @('0.8.0','0.9.0')){throw 'Cloud backend v0.8.0 or v0.9.0 required.'}
-$files=@('server.py','email_alerts.py','dvr_actions.py','web\index.html','web\app.js','Configure-SES.ps1')
-foreach($name in @('server.py','email_alerts.py','dvr_actions.py')){
+if(-not $health.ok -or $health.version -notin @('0.8.0','0.9.0','0.10.0')){throw 'Cloud backend v0.8.0 or v0.9.0 required.'}
+$files=@('server.py','email_alerts.py','ai_monitor.py','dvr_actions.py','web\index.html','web\app.js','Configure-SES.ps1')
+foreach($name in @('server.py','email_alerts.py','ai_monitor.py','dvr_actions.py')){
  & $python -m py_compile (Join-Path $PSScriptRoot $name)
  if($LASTEXITCODE -ne 0){throw "Source validation failed: $name"}
 }
@@ -29,9 +29,9 @@ try{
  foreach($name in $files){Copy-Item (Join-Path $PSScriptRoot $name) (Join-Path $root $name) -Force}
  Start-ScheduledTask -TaskName 'Race Operations Backend' -TaskPath '\'
  $ok=$false
- for($i=0;$i -lt 20;$i++){Start-Sleep -Seconds 1;try{$h=Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 2;if($h.ok -and $h.version -eq '0.9.0'){$ok=$true;break}}catch{}}
+ for($i=0;$i -lt 20;$i++){Start-Sleep -Seconds 1;try{$h=Invoke-RestMethod 'http://127.0.0.1:8799/health' -TimeoutSec 2;if($h.ok -and $h.version -eq '0.10.0'){$ok=$true;break}}catch{}}
  if(-not $ok){throw 'Updated backend did not pass its startup check.'}
- Write-Host 'v0.9.0 installed. Mute toggles are active. Configure SES to enable email sending.'
+ Write-Host 'v0.10.0 installed. Mute toggles are active. Configure SES to enable email sending.'
  Write-Host 'Only the dashboard backend restarted. No RaceBot, Commentator, OBS or DVR application restarted.'
  Write-Host 'Refresh with Ctrl+F5 and sign in again.'
  Write-Host "Backup: $backup"

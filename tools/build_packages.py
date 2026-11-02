@@ -15,11 +15,11 @@ def build(output):
     files = {name: (ROOT/name).read_bytes() for name in paths if (ROOT/name).is_file()}
     groups = {
         'RaceOperations-Standalone-Source': files,
-        'RaceOperations-Cloud-Source-v0.9.0': {p:b for p,b in files.items() if p.startswith(('cloud/', 'docs/')) or p=='README.md'},
+        'RaceOperations-Cloud-Source-v0.10.0': {p:b for p,b in files.items() if p.startswith(('cloud/', 'docs/')) or p=='README.md'},
         'RaceOperations-DVR-Source-v0.8.0': {p:b for p,b in files.items() if p.startswith(('dvr/', 'docs/')) or p=='README.md'},
-        'RaceOperations-Dashboard-Map-v0.9.2': {p.removeprefix('cloud/'):files[p] for p in ('cloud/web/index.html','cloud/web/app.js','cloud/Update-Dashboard.ps1','cloud/UI-MANIFEST.json')},
+        'RaceOperations-Dashboard-Map-v0.10.0': {p.removeprefix('cloud/'):files[p] for p in ('cloud/web/index.html','cloud/web/app.js','cloud/Update-Dashboard.ps1','cloud/UI-MANIFEST.json')},
     }
-    groups['RaceOperations-Dashboard-Map-v0.9.2']['README.md']=files['docs/dashboard-map-v0.9.2.md']
+    groups['RaceOperations-Dashboard-Map-v0.10.0']['README.md']=files['docs/dashboard-map-v0.9.2.md']
     hashes = {}
     revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     dirty = bool(subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT, text=True).strip())

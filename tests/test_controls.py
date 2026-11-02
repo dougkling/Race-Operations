@@ -19,6 +19,20 @@ class Controls(unittest.TestCase):
  def beat(self,status='red',token='cloud-token',host='cloud'):
   return self.req('/api/heartbeat',{'hostId':host,'agentVersion':VERSION,'components':[{'id':'racebot','status':status},{'id':'commentator','status':'green'}]}, {'Authorization':'Bearer '+token})
  def request(self,csrf,jid=None):return self.req('/api/actions/pitwall-restart',{'requestId':jid or str(uuid.uuid4()),'confirmation':'Restart RaceBot + Commentator'},{'X-CSRF-Token':csrf})
+ def test_ai_reconnect_authenticated_deduplicated_cloud_only(self):
+  self.cfg['aiReconnectEnabled']=True
+  self.cfg['hosts'][0]['components'].append({'id':'racebot-ai'})
+  csrf=self.login()
+  self.req('/api/heartbeat',{'hostId':'cloud','agentVersion':'0.10.0','components':[{'id':'racebot','status':'green'},{'id':'commentator','status':'green'},{'id':'racebot-ai','status':'red','aiReason':'timeout'}]},{'Authorization':'Bearer cloud-token'})
+  status=self.req('/api/status')[1];self.assertTrue(status['aiReconnectAllowed']);self.assertTrue(status['restartAllowed'])
+  body={'requestId':str(uuid.uuid4()),'confirmation':'Reconnect RaceBot AI'}
+  self.assertEqual(self.req('/api/actions/racebot-ai-reconnect',body)[0],403)
+  self.assertEqual(self.req('/api/actions/racebot-ai-reconnect',body,{'X-CSRF-Token':csrf})[0],202)
+  self.assertEqual(self.req('/api/actions/racebot-ai-reconnect',body,{'X-CSRF-Token':csrf})[0],200)
+  self.assertEqual(self.beat(token='dvr-token',host='dvr')[1]['commands'],[])
+  command=self.beat()[1]['commands'];self.assertEqual(command[0]['action'],'racebot-ai-reconnect')
+  self.assertEqual(self.req('/api/action-result',{'hostId':'dvr','id':body['requestId'],'state':'succeeded','result':'ai_health_passed'},{'Authorization':'Bearer dvr-token'})[0],403)
+  self.assertEqual(self.req('/api/action-result',{'hostId':'cloud','id':body['requestId'],'state':'succeeded','result':'ai_health_passed'},{'Authorization':'Bearer cloud-token'})[0],200)
  def test_monitor_mute_api(self):
   body={'hostId':'cloud','componentId':'racebot','muted':True}
   self.assertEqual(self.req('/api/monitor-mute',body)[0],401)

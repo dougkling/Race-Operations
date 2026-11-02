@@ -48,3 +48,8 @@ There are no recovery emails or periodic reminder emails. Total backend outage r
 ## Gather support evidence
 
 Provide UI/backend/agent versions, affected host/component, timestamp/timezone, exact sanitized job ID/result, task state/last-run/exit code and report age. Exclude bearer/admin/SMTP/OBS secrets, raw config files and private databases. Record the installed package/commit hash. Follow [UPGRADE_ROLLBACK.md](UPGRADE_ROLLBACK.md) for recovery from a failed update.
+
+
+## AI health and recovery v0.10.0
+
+See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.

@@ -15,6 +15,16 @@ class Alerts(unittest.TestCase):
  def tick(self,status='red',advance=0):
   self.now+=advance;self.store.samples['cloud']={'received':self.now,'components':[{'id':'racebot','status':status}]};self.engine.tick()
  def states(self):return [r[0] for r in self.store.db.execute('SELECT state FROM email_outbox')]
+ def test_ai_red_alerts_even_with_racebot_http_green(self):
+  self.store.config['hosts'][0]['components'].append({'id':'racebot-ai'})
+  def beat(ai):
+   self.store.samples['cloud']={'received':self.now,'components':[{'id':'racebot','status':'green'},{'id':'racebot-ai','status':ai}]}
+   self.engine.tick()
+  beat('red');self.now+=29;beat('red');self.assertFalse(self.sent)
+  self.now+=1;beat('red');self.assertEqual(len(self.sent),1)
+  self.assertEqual(self.sent[0]['component'],'racebot-ai')
+  beat('unknown');self.now+=30;beat('red');self.assertEqual(len(self.sent),1)
+  beat('green');beat('red');self.now+=30;beat('red');self.assertEqual(len(self.sent),2)
  def test_delay_once_recovery_new_incident(self):
   self.tick();self.tick(advance=29);self.assertEqual(len(self.sent),0);self.tick(advance=1);self.tick(advance=10);self.assertEqual(len(self.sent),1)
   self.tick('green');self.tick();self.tick(advance=30);self.assertEqual(len(self.sent),2)

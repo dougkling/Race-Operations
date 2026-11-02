@@ -24,7 +24,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Python 3.10+ is required.' }
 if ($LASTEXITCODE -ne 0) { throw 'Agent syntax check failed.' }
 # Only public health fields; no enrollment token is sent in this preflight.
 $health = Invoke-RestMethod ($ServerUrl+'/health') -TimeoutSec 10
-if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0','0.9.0')) { throw 'Expected compatible cloud backend was not reachable.' }
+if (-not $health.ok -or $health.version -notin @('0.3.0','0.3.2','0.4.0','0.4.1','0.5.0','0.6.0','0.7.0','0.8.0','0.9.0','0.10.0')) { throw 'Expected compatible cloud backend was not reachable.' }
 if($legacyHttp){Write-Warning 'Legacy HTTP selected. The DVR bearer token travels unencrypted.'}
 Write-Host 'Paste the DVR agent token, NOT the dashboard administrator token. It will not be displayed.'
 $secure = Read-Host 'DVR agent token' -AsSecureString

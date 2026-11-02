@@ -56,3 +56,8 @@ Before completing it: compare actual deployed RaceBot source, validate authentic
 ## First actions for the next maintainer
 
 Read INSTALLATION.md, CONFIGURATION.md, UPGRADE_ROLLBACK.md, OPEN_ITEMS.md and CONTRIBUTING.md. Check branch/status and use a feature branch. Run relevant tests before edits and record failures honestly. Confirm whether this source was published and branch protection enabled. Match installed files to a commit before touching a live event host. Do not use source-import tags as proof of fresh deployment acceptance.
+
+
+## v0.10.0 AI monitor implementation
+
+The new implementation supersedes the unfinished historical AI draft described above. It records real moderation/generation/search outcomes, runs bounded five-minute paid probes, exports private loopback evidence, integrates a separate cloud monitor/email incident, and enables authenticated failure-only AI reconnect and shared application restart. See ai-monitor-v0.10.0.md for source, installation, cost, preservation, rollback and acceptance limits. Legacy development/racebot-ai-reconnect remains historical; do not merge it over this implementation.

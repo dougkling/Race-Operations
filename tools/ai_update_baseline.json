@@ -1,0 +1,10 @@
+{
+  "sourceCommit": "143eff53f83eb2b83218b1a5cc45ca81e8b62a1a",
+  "files": {
+    "server.py": "f2437ade44459456628c4a2de3452ea770b076bb46ba56a7373ba21bae231eaf",
+    "agent.py": "dbe4cb97249655d6d96c02567f6a32547dcf1cc44db93ca5843a9c8ab4e8a6d8",
+    "email_alerts.py": "46fbd6499e499f39b323440fdfe11c2357829b4e6944bcadbfcff4e259c3d064",
+    "ai_monitor.py": null,
+    "web/app.js": "cbbdbdbe8d8e67ffafb6ebca9e5df30b317db8bc22a52924d6d0dcfbd044284e"
+  }
+}
