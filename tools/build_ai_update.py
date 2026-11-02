@@ -10,12 +10,9 @@ def build(racebot,output):
         'check-pending.py':(ROOT/'cloud/check-pending.py').read_bytes(),
         'racebot/ai_health.py':(racebot/'app/ai_health.py').read_bytes(),
         'app-patch.json':(racebot/'scripts/ai-monitor.patch.json').read_bytes()}
- operations={}
+ operations=json.loads((ROOT/'tools/ai_update_baseline.json').read_text())['files']
  for name in ('server.py','agent.py','email_alerts.py','ai_monitor.py','web/app.js'):
   data=(ROOT/'cloud'/name).read_bytes();files['operations/'+name]=data
-  try:old=subprocess.check_output(['git','show','origin/main:cloud/'+name],cwd=ROOT,stderr=subprocess.DEVNULL)
-  except subprocess.CalledProcessError:old=None
-  operations[name]=sha(norm(old)) if old is not None else None
  manifest={'operations':operations,'payload':{name:sha(body) for name,body in files.items()}}
  files['manifest.json']=json.dumps(manifest,indent=2).encode()
  buffer=io.BytesIO()
