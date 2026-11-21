@@ -147,3 +147,9 @@ Automated tests do not certify a fresh Windows installation, live recovery, fire
 ## AI health and recovery v0.10.0
 
 See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.
+
+## Mobile map viewer (development, 2026-11-21)
+
+The overview fits the available width. Expand map opens a full-screen dialog with pinch zoom, drag, zoom buttons and Fit. Close/Escape returns to the overview; tapping a live status closes the viewer and focuses its monitor row. Polling updates the same SVG nodes. Scoring remains pending.
+
+This UI-only change is on a feature branch. Packaging, release and production deployment are held until the owner finishes the current work session. When approved, use the existing dashboard-only updater and retain its web backup for rollback; no backend configuration or listener changes are needed. Browser regression coverage includes desktop, tablet, 390px and 320px layouts. Local browser execution is blocked by the runtime's socket restrictions; GitHub CI provides the browser verification. Physical phone gesture acceptance remains required.

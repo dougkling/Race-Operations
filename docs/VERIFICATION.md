@@ -45,3 +45,9 @@ See OPEN_ITEMS.md for publication, native validation and product gaps. Do not ma
 See [the AI monitor contract, installation, validation and rollback](ai-monitor-v0.10.0.md). This supersedes earlier statements that AI monitoring is absent. Actual Windows deployment and live email acceptance remain separate from automated source tests.
 
 AI update verification in this change: RaceBot 242 offline unit tests passed; the Race Operations regression suite includes AI alert and scoped recovery tests. Chromium Headless Shell 134 passed desktop/mobile dashboard tests at 1440, 768, 390 and 320 pixels, including the AI map node and failure-only reconnect confirmation. Installer planning/apply/idempotency/rollback/concurrent-edit tests passed. PowerShell native execution and live Windows acceptance remain unrun locally.
+
+## Mobile map viewer (development, 2026-11-21)
+
+The overview fits the available width. Expand map opens a full-screen dialog with pinch zoom, drag, zoom buttons and Fit. Close/Escape returns to the overview; tapping a live status closes the viewer and focuses its monitor row. Polling updates the same SVG nodes. Scoring remains pending.
+
+This UI-only change is on a feature branch. Packaging, release and production deployment are held until the owner finishes the current work session. When approved, use the existing dashboard-only updater and retain its web backup for rollback; no backend configuration or listener changes are needed. Browser regression coverage includes desktop, tablet, 390px and 320px layouts. Local browser execution is blocked by the runtime's socket restrictions; GitHub CI provides the browser verification. Physical phone gesture acceptance remains required.

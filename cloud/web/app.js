@@ -149,6 +149,7 @@ function render(d){
 function clearStatus(message){
  document.querySelector('#hosts').replaceChildren();document.querySelector('#overview').hidden=true;document.querySelector('#activity-panel').hidden=true;
  document.querySelector('#email-status').hidden=true;
+ mapViewer?.close();
  document.querySelector('#topology-panel').hidden=true;
  document.querySelector('#updated').textContent=message;document.querySelector('#backend-version').textContent=message;
 }
@@ -172,28 +173,43 @@ function svgNode(tag,attrs={},text){
 }
 function jumpToMonitor(targetId){
  const target=document.getElementById(targetId);if(!target)return;
+ mapViewer?.close();
  const details=target.querySelector('details');if(details)details.open=true;
  history.replaceState(null,'','#'+targetId);
  target.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:'auto'});
 }
-function focusMapArea(area){
- const views={dvr:[390,420],cloud:[1030,170],scoring:[390,90],s3:[60,480]};
- const point=views[area],canvas=document.querySelector('#topology-canvas'),svg=canvas.querySelector('svg');
- if(!point||!svg)return;
- const scale=svg.getBoundingClientRect().width/1800;
- canvas.scrollTo({left:Math.max(0,point[0]*scale-12),top:Math.max(0,point[1]*scale-12),behavior:'auto'});
-}
-function positionInitialTopology(){
- const panel=document.querySelector('#topology-panel');
- if(topologyPositioned||panel.hidden||!panel.open)return;
- topologyPositioned=true;
- if(matchMedia('(max-width:900px)').matches)focusMapArea('dvr');
+// Move the same live SVG into the dialog; polling keeps updating its nodes.
+let mapViewer=null;
+function positionInitialTopology(){}
+function setupMapViewer(){
+ const dialog=document.querySelector('#map-viewer'),canvas=document.querySelector('#topology-canvas'),svg=canvas.querySelector('svg'),stage=document.querySelector('#map-stage');
+ let scale=1,x=0,y=0,gesture=null,moved=false,suppressClick=false;
+ const pointers=new Map();
+ function paint(){svg.style.width=1800*scale+'px';svg.style.height=1180*scale+'px';svg.style.transform=`translate(${x}px,${y}px)`}
+ function fit(){scale=Math.min(stage.clientWidth/1800,stage.clientHeight/1180);x=(stage.clientWidth-1800*scale)/2;y=(stage.clientHeight-1180*scale)/2;paint()}
+ function zoom(factor,cx=stage.clientWidth/2,cy=stage.clientHeight/2){const next=Math.max(Math.min(stage.clientWidth/1800,stage.clientHeight/1180),Math.min(3,scale*factor));x=cx-(cx-x)*next/scale;y=cy-(cy-y)*next/scale;scale=next;paint()}
+ function close(){if(dialog.open){dialog.close();restore()}}
+ function sample(){const p=[...pointers.values()];return {x:p.reduce((n,v)=>n+v.x,0)/p.length,y:p.reduce((n,v)=>n+v.y,0)/p.length,d:p.length===2?Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y):0}}
+ document.querySelector('#map-open').onclick=()=>{dialog.showModal();document.body.classList.add('map-viewing');stage.append(canvas);fit();document.querySelector('#map-close').focus()};
+ function restore(){document.querySelector('#map-home').append(canvas);svg.removeAttribute('style');document.body.classList.remove('map-viewing');pointers.clear();gesture=null;document.querySelector('#map-open').focus({preventScroll:true})}
+ dialog.addEventListener('cancel',e=>{e.preventDefault();close()});
+ document.querySelector('#map-close').onclick=close;
+ document.querySelector('#map-fit').onclick=fit;
+ document.querySelector('#map-zoom-in').onclick=()=>zoom(1.5);
+ document.querySelector('#map-zoom-out').onclick=()=>zoom(1/1.5);
+ stage.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(!pointers.size){moved=false;suppressClick=false}pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});gesture=sample()});
+ stage.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const next=sample();if(!moved&&Math.hypot(next.x-gesture.x,next.y-gesture.y)<5&&Math.abs(next.d-gesture.d)<5)return;moved=true;suppressClick=true;stage.setPointerCapture(e.pointerId);const r=stage.getBoundingClientRect();if(gesture.d&&next.d)zoom(next.d/gesture.d,gesture.x-r.left,gesture.y-r.top);x+=next.x-gesture.x;y+=next.y-gesture.y;gesture=next;paint()});
+ function end(e){pointers.delete(e.pointerId);gesture=pointers.size?sample():null}
+ stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
+ stage.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopImmediatePropagation();suppressClick=false}},true);
+ stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect();zoom(Math.exp(-e.deltaY*.002),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ new ResizeObserver(()=>{if(dialog.open)fit()}).observe(stage);
+ mapViewer={close};
 }
 function buildTopology(){
  const panel=document.querySelector('#topology-panel');
  try{panel.open=localStorage.getItem('raceops.topology.collapsed')!=='true'}catch{panel.open=true}
  panel.addEventListener('toggle',()=>{try{localStorage.setItem('raceops.topology.collapsed',String(!panel.open))}catch{}positionInitialTopology()});
- for(const button of document.querySelectorAll('[data-map-view]'))button.addEventListener('click',()=>focusMapArea(button.dataset.mapView));
  const svg=svgNode('svg',{viewBox:'0 0 1800 1180',class:'topology-svg',role:'group','aria-labelledby':'topology-svg-title topology-svg-description'});
  svg.append(svgNode('title',{id:'topology-svg-title'},'Race Operations live topology'),svgNode('desc',{id:'topology-svg-description'},'Scoring PC above DVR PC on the left, Cloud PC on the right, S3 storage and Internet connections. Each monitored service links to its detailed row below. Unmonitored services have no health status.'));
  const wires=svgNode('g',{'aria-hidden':'true',class:'map-wires'}),frames=svgNode('g'),rows=svgNode('g'),ports=svgNode('g',{'aria-hidden':'true','pointer-events':'none'});svg.append(wires,frames,rows,ports);
@@ -253,9 +269,10 @@ function buildTopology(){
  wire([[60,560],[30,560],[30,48],[1650,48],[1650,620]],'80',[1200,48]);
  wire([[1650,860],[1650,1100],[1510,1100]],null);
  document.querySelector('#topology-canvas').append(svg);
+ setupMapViewer();
  return entries;
 }
-let topologyEntries=null,topologyPositioned=false;
+let topologyEntries=null;
 function renderTopology(d,counts){
  if(!topologyEntries)topologyEntries=buildTopology();
  document.querySelector('#topology-panel').hidden=false;

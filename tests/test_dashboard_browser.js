@@ -12,14 +12,13 @@ await page.route('http://raceops.test/**',async route=>{const u=new URL(route.re
 for(const width of [1440,768,390,320]){
  await page.setViewportSize({width,height:1000});await page.goto('http://raceops.test/');await page.waitForSelector('.service');
  assert.equal(await page.locator('.map-live').count(),16);
- if(width<=900){
-  assert(await page.locator('#topology-canvas').evaluate(e=>e.scrollLeft>0&&e.scrollTop>0));
-  for(const area of ['cloud','scoring','s3','dvr']){
-   await page.locator('[data-map-view="'+area+'"]').click();
-   const selector=area==='s3'?'[data-monitor-key="dvr:pilot-review"]':area==='scoring'?'[data-map-target="monitor-scoring-agent-link"]':'[data-monitor-key="'+area+':agent-link"]';
-   assert(await page.locator(selector).evaluate(e=>{const a=e.getBoundingClientRect(),b=document.querySelector('#topology-canvas').getBoundingClientRect();return a.left>=b.left&&a.left<b.right&&a.top>=b.top&&a.bottom<=b.bottom}));
-  }
- }
+ assert(await page.locator('#topology-canvas').evaluate(e=>e.scrollWidth<=e.clientWidth&&e.scrollLeft===0));
+ await page.locator('#map-open').click();assert(await page.locator('#map-viewer').isVisible());
+ const fitted=await page.locator('.topology-svg').evaluate(e=>e.getBoundingClientRect().width);
+ await page.locator('#map-zoom-in').click();assert(await page.locator('.topology-svg').evaluate((e,w)=>e.getBoundingClientRect().width>w,fitted));
+ await page.locator('#map-fit').click();assert(Math.abs(await page.locator('.topology-svg').evaluate(e=>e.getBoundingClientRect().width)-fitted)<1);
+ await page.keyboard.press('Escape');assert(await page.locator('#map-viewer').isHidden());assert.equal(await page.evaluate(()=>document.activeElement.id),'map-open');
+
  assert(await page.evaluate(()=>Array.from(document.querySelectorAll('.map-live')).every(a=>document.getElementById(a.dataset.mapTarget)?.classList.contains('state-'+a.dataset.status))));
  assert.equal(await page.locator('.service').count(),16);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  assert.equal(await page.getByRole('switch').count(),16);assert.equal(await page.locator('#host-scoring .pending-row').count(),3);assert.equal(await page.locator('#host-scoring button').count(),0);
@@ -79,15 +78,17 @@ proxy.dvrConnected=false;await page.evaluate(()=>update());assert.equal(await pa
 cloud.connected=false;await page.evaluate(()=>update());assert.equal(await page.locator('[data-monitor-key="dvr:connector"]').getAttribute('data-status'),'unknown');
 assert(await page.evaluate(()=>!Array.from(document.querySelectorAll('.map-context')).some(n=>n.classList.contains('state-green'))));
 await page.locator('[data-map-target="monitor-scoring-control"]').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'monitor-scoring-control');
-// Retain scroll and SVG node identity across refreshes.
+// Expanded map preserves node identity and zoom during polling; links close it.
 dvr.connected=true;dvr.agentStatus='green';cloud.connected=true;proxy.dvrConnected=true;obs.status='green';
-await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{window.savedMapNode=document.querySelector('[data-monitor-key="dvr:obs"]');const c=document.querySelector('#topology-canvas');c.scrollLeft=400;c.scrollTop=200});
-await page.evaluate(()=>update());assert(await page.evaluate(()=>window.savedMapNode===document.querySelector('[data-monitor-key="dvr:obs"]')));
-assert.equal(await page.locator('#topology-canvas').evaluate(e=>e.scrollLeft),400);
-assert.equal(await page.locator('#topology-canvas').evaluate(e=>e.scrollTop),200);
+await page.setViewportSize({width:390,height:844});await page.locator('#map-open').click();
+await page.locator('#map-zoom-in').click();
+await page.evaluate(()=>{window.savedMapNode=document.querySelector('[data-monitor-key="dvr:obs"]');window.savedTransform=document.querySelector('.topology-svg').getAttribute('style')});
+await page.evaluate(()=>update());assert(await page.evaluate(()=>window.savedMapNode===document.querySelector('[data-monitor-key="dvr:obs"]')&&window.savedTransform===document.querySelector('.topology-svg').getAttribute('style')));
+await page.locator('#map-fit').click();await obsLink.click();assert(await page.locator('#map-viewer').isHidden());assert.equal(await page.evaluate(()=>document.activeElement.id),'monitor-dvr-obs');
 assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+await page.locator('#map-open').click();
 backendUnavailable=true;await page.evaluate(()=>update());assert(await panel.isHidden());assert.match(await page.locator('#error').textContent(),/Backend unavailable/);
 backendUnavailable=false;await page.evaluate(()=>update());assert(await panel.isVisible());
 unauthorized=true;await page.evaluate(()=>update());assert(await panel.isHidden());
-assert(await page.locator('#login').isVisible());assert(await page.locator('#overview').isHidden());assert(await page.locator('#activity-panel').isHidden());assert.equal(errors.length,0,errors.join('\n'));await browser.close();console.log('Dashboard passed at 1440, 768, 390 and 320px: map/row status parity, all 16 jumps, keyboard links, remembered collapse, live/unknown/muted states, persistent map scroll/focus, no overflow, guarded controls and session expiry.');
+assert(await page.locator('#login').isVisible());assert(await page.locator('#overview').isHidden());assert(await page.locator('#activity-panel').isHidden());assert.equal(errors.length,0,errors.join('\n'));await browser.close();console.log('Dashboard passed at 1440, 768, 390 and 320px: map/row status parity, all 16 jumps, keyboard links, remembered collapse, live/unknown/muted states, fitted map, fullscreen zoom/reset/focus, no overflow, guarded controls and session expiry.');
 })().catch(e=>{console.error(e);process.exit(1)});
