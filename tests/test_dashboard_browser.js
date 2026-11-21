@@ -84,6 +84,19 @@ await page.setViewportSize({width:390,height:844});await page.locator('#map-open
 await page.locator('#map-zoom-in').click();
 await page.evaluate(()=>{window.savedMapNode=document.querySelector('[data-monitor-key="dvr:obs"]');window.savedTransform=document.querySelector('.topology-svg').getAttribute('style')});
 await page.evaluate(()=>update());assert(await page.evaluate(()=>window.savedMapNode===document.querySelector('[data-monitor-key="dvr:obs"]')&&window.savedTransform===document.querySelector('.topology-svg').getAttribute('style')));
+// Real browser touch input exercises pinch/pan and suppresses accidental link taps.
+const cdp=await page.context().newCDPSession(page);
+const box=await page.locator('#map-stage').boundingBox(),cx=box.x+box.width/2,cy=box.y+box.height/2;
+const touch=async(type,points)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:points.map(([id,x,y])=>({id,x,y}))});
+const beforePinch=await page.locator('.topology-svg').evaluate(e=>e.getBoundingClientRect().width);
+await touch('touchStart',[[0,cx-30,cy],[1,cx+30,cy]]);
+await touch('touchMove',[[0,cx-70,cy],[1,cx+70,cy]]);
+await touch('touchEnd',[]);
+assert(await page.locator('.topology-svg').evaluate((e,w)=>e.getBoundingClientRect().width>w,beforePinch));
+const beforePan=await page.locator('.topology-svg').evaluate(e=>e.style.transform);
+await touch('touchStart',[[0,cx,cy]]);await touch('touchMove',[[0,cx+45,cy+50]]);await touch('touchEnd',[]);
+assert.notEqual(await page.locator('.topology-svg').evaluate(e=>e.style.transform),beforePan);
+assert(await page.locator('#map-viewer').isVisible());
 await page.locator('#map-fit').click();await obsLink.click();assert(await page.locator('#map-viewer').isHidden());assert.equal(await page.evaluate(()=>document.activeElement.id),'monitor-dvr-obs');
 assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
 await page.locator('#map-open').click();
