@@ -61,3 +61,9 @@ Read INSTALLATION.md, CONFIGURATION.md, UPGRADE_ROLLBACK.md, OPEN_ITEMS.md and C
 ## v0.10.0 AI monitor implementation
 
 The new implementation supersedes the unfinished historical AI draft described above. It records real moderation/generation/search outcomes, runs bounded five-minute paid probes, exports private loopback evidence, integrates a separate cloud monitor/email incident, and enables authenticated failure-only AI reconnect and shared application restart. See ai-monitor-v0.10.0.md for source, installation, cost, preservation, rollback and acceptance limits. Legacy development/racebot-ai-reconnect remains historical; do not merge it over this implementation.
+
+## Mobile map viewer (development, 2026-11-21)
+
+The overview fits the available width. Expand map opens a full-screen dialog with pinch zoom, drag, zoom buttons and Fit. Close/Escape returns to the overview; tapping a live status closes the viewer and focuses its monitor row. Polling updates the same SVG nodes. Scoring remains pending.
+
+This UI-only change is on a feature branch. Packaging, release and production deployment are held until the owner finishes the current work session. When approved, use the existing dashboard-only updater and retain its web backup for rollback; no backend configuration or listener changes are needed. Browser regression coverage includes desktop, tablet, 390px and 320px layouts. Local browser execution is blocked by the runtime's socket restrictions; GitHub CI provides the browser verification. Physical phone gesture acceptance remains required.
