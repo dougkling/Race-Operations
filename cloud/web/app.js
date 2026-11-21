@@ -180,7 +180,6 @@ function jumpToMonitor(targetId){
 }
 // Move the same live SVG into the dialog; polling keeps updating its nodes.
 let mapViewer=null;
-function positionInitialTopology(){}
 function setupMapViewer(){
  const dialog=document.querySelector('#map-viewer'),canvas=document.querySelector('#topology-canvas'),svg=canvas.querySelector('svg'),stage=document.querySelector('#map-stage');
  let scale=1,x=0,y=0,gesture=null,moved=false,suppressClick=false;
@@ -209,7 +208,7 @@ function setupMapViewer(){
 function buildTopology(){
  const panel=document.querySelector('#topology-panel');
  try{panel.open=localStorage.getItem('raceops.topology.collapsed')!=='true'}catch{panel.open=true}
- panel.addEventListener('toggle',()=>{try{localStorage.setItem('raceops.topology.collapsed',String(!panel.open))}catch{}positionInitialTopology()});
+ panel.addEventListener('toggle',()=>{try{localStorage.setItem('raceops.topology.collapsed',String(!panel.open))}catch{}});
  const svg=svgNode('svg',{viewBox:'0 0 1800 1180',class:'topology-svg',role:'group','aria-labelledby':'topology-svg-title topology-svg-description'});
  svg.append(svgNode('title',{id:'topology-svg-title'},'Race Operations live topology'),svgNode('desc',{id:'topology-svg-description'},'Scoring PC above DVR PC on the left, Cloud PC on the right, S3 storage and Internet connections. Each monitored service links to its detailed row below. Unmonitored services have no health status.'));
  const wires=svgNode('g',{'aria-hidden':'true',class:'map-wires'}),frames=svgNode('g'),rows=svgNode('g'),ports=svgNode('g',{'aria-hidden':'true','pointer-events':'none'});svg.append(wires,frames,rows,ports);
@@ -276,7 +275,6 @@ let topologyEntries=null;
 function renderTopology(d,counts){
  if(!topologyEntries)topologyEntries=buildTopology();
  document.querySelector('#topology-panel').hidden=false;
- positionInitialTopology();
  const labels={green:'Healthy',yellow:'Degraded',red:'Offline',unknown:'Unknown'};
  for(const entry of topologyEntries){
   const c=monitorEvidence(d.hosts,entry.host,entry.id),status=labels[c?.status]?c.status:'unknown';
